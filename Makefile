@@ -58,8 +58,7 @@ cross-build: test
 	done
 
 
-DIST_DIRS := find * -type d -exec
-#DIST_DIRS := find . -maxdepth 0 -type d -exec
+DIST_DIRS := find * -maxdepth 0 -type d -exec
 
 .PHONY: dist
 dist: cross-build
@@ -67,6 +66,7 @@ dist: cross-build
 	$(DIST_DIRS) cp ../LICENSE {} \; && \
 	$(DIST_DIRS) cp ../README.md  {} \; && \
 	$(DIST_DIRS) cp ../tavle.tml.sample  {} \;  && \
+	$(DIST_DIRS) cp -r ../public {} \;  && \
 	$(DIST_DIRS) tar -zcf $(NAME)-$(VERSION)-{}.tar.gz {} \;  && \
 	$(DIST_DIRS) zip -r $(NAME)-$(VERSION)-{}.zip {} \;  && \
 	cd ..
