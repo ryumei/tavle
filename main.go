@@ -90,7 +90,7 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 func handleMessages() {
 	for {
-		// Grab the nexe message from the broadcast channel
+		// Grab the next message from the broadcast channel
 		msg := <-broadcast
 		// Send it out to every client that is currently connected
 		for client := range clients {

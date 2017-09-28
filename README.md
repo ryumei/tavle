@@ -1,3 +1,3 @@
 A talk board
 
-elv.tokyo/tavle
+*tavle* is a blackboard in Norwegian.
