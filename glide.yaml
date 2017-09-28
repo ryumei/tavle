@@ -3,3 +3,4 @@ ignore:
   - elv.tokyo/tavle
 import:
   - package: github.com/gorilla/websocket
+  - package: github.com/BurntSushi/toml

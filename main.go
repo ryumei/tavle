@@ -1,11 +1,33 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gorilla/websocket"
 )
+
+/*
+ * ビルド時に -X オプションで渡されることを期待。
+ * Version ソフトウェアバージョン
+ * Revision ソフトウェアリビジョン
+ */
+var (
+	Version  string
+	Revision string
+	distName string
+)
+
+type Config struct {
+	Server ServerConfig
+}
+type ServerConfig struct {
+	Port     uint
+	Endpoint string
+	Debug    bool
+}
 
 // Global variables are usually a bad practice but we will use them this time for simplicity.
 var clients = make(map[*websocket.Conn]bool) // connected clients
@@ -62,7 +84,20 @@ func handleMessages() {
 	}
 }
 
+func init() {
+	var confPath string
+	flag.StringVar(&confPath, "c", "tavle.toml", "Path to config file")
+	flag.Parse()
+
+	var config Config
+	if _, err := toml.DecodeFile(confPath, &config); err != nil {
+		// Error Handling
+	}
+	log.Printf("[DEBUG] %v", config.Server.Port)
+}
+
 func main() {
+
 	// Create a simple file server
 	fs := http.FileServer(http.Dir("./public"))
 	http.Handle("/", fs)
