@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -57,7 +56,7 @@ var broadcast = make(chan Message)           // broadcast channel
 // Configure the upgrader
 var upgrader = websocket.Upgrader{}
 
-// Define out message object
+// Message is message object
 type Message struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
@@ -105,17 +104,17 @@ func handleMessages() {
 	}
 }
 
-func logConfig(conf LogConfig) *os.File {
-	var logWriter *os.File
-	if conf.ServerLog == "" {
-		logWriter = os.Stderr
-	} else {
-		var err error
-		if logWriter, err = os.OpenFile(conf.ServerLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); err != nil {
-			logWriter = os.Stderr
-			log.Println("[WARN] Failed to open log file.", conf.ServerLog)
-		}
+func openLogFile(logPath string) *os.File {
+	logWriter, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return os.Stderr
 	}
+	return logWriter
+}
+
+func logConfig(conf LogConfig) {
+	logWriter := openLogFile(conf.ServerLog)
+
 	// Logging with logutils
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
@@ -128,24 +127,24 @@ func logConfig(conf LogConfig) *os.File {
 		logFlags |= log.Lshortfile
 	}
 	log.SetFlags(logFlags)
-
-	return logWriter
 }
 
 var r *http.ServeMux
 
 // registHandlers maps URL paths to handler functions
-func registHandlers(out io.Writer) {
+func registHandlers(logPath string) {
+	logger := openLogFile(logPath)
+
 	r = http.NewServeMux()
 
 	// Create a simple file server
-	r.Handle("/", handlers.LoggingHandler(out, http.FileServer(http.Dir("./public"))))
+	r.Handle("/", handlers.LoggingHandler(logger, http.FileServer(http.Dir("./public"))))
 
 	// Configure websocket route
 	for route, f := range map[string]func(http.ResponseWriter, *http.Request){
 		"/ws": handleConnections,
 	} {
-		r.Handle(route, handlers.LoggingHandler(out, http.HandlerFunc(f)))
+		r.Handle(route, handlers.LoggingHandler(logger, http.HandlerFunc(f)))
 	}
 
 	go handleMessages()
@@ -155,24 +154,17 @@ var config Config
 
 func init() {
 	var confPath string
-	flag.StringVar(&confPath, "c", "tavle.toml", "Path to config file")
+	flag.StringVar(&confPath, "c", "tavle.tml", "Path to config file")
 	flag.Parse()
 
 	if _, err := toml.DecodeFile(confPath, &config); err != nil {
 		log.Println(err)
 		log.Fatalln("Failed to load config file.", confPath)
 	}
-	logWriter := logConfig(config.Log)
+	logConfig(config.Log)
 
-	// access.log
-	f, err := os.OpenFile(config.Log.accesslog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		f = logWriter
-		log.Println("[WARN] Failed to open log file.", config.Log.accesslog)
-	}
-	registHandlers(f)
-
-	log.Printf("[DEBUG] %v", config.Server.Port)
+	// handler on http endpoint
+	registHandlers(config.Log.accesslog)
 }
 
 var activeConnWaiting sync.WaitGroup

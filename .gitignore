@@ -1,8 +1,9 @@
-*.toml
+*.tml
 glide.lock
 
 bin/
 vendor/
+dist/
 
 # Binaries for programs and plugins
 *.exe

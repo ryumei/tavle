@@ -59,15 +59,16 @@ cross-build: test
 
 
 DIST_DIRS := find * -type d -exec
+#DIST_DIRS := find . -maxdepth 0 -type d -exec
 
 .PHONY: dist
 dist: cross-build
 	cd dist && \
 	$(DIST_DIRS) cp ../LICENSE {} \; && \
-	$(DIST_DIRS) cp ../README.md {} \; && \
-	$(DIST_DIRS) cp ../config.tml.sample {} \; && \
-	$(DIST_DIRS) tar -zcf $(NAME)-$(VERSION)-{}.tar.gz {} \; && \
-	$(DIST_DIRS) zip -r $(NAME)-$(VERSION)-{}.zip {} \; && \
+	$(DIST_DIRS) cp ../README.md  {} \; && \
+	$(DIST_DIRS) cp ../tavle.tml.sample  {} \;  && \
+	$(DIST_DIRS) tar -zcf $(NAME)-$(VERSION)-{}.tar.gz {} \;  && \
+	$(DIST_DIRS) zip -r $(NAME)-$(VERSION)-{}.zip {} \;  && \
 	cd ..
 
 .PHONY: glide
