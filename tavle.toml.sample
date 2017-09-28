@@ -1,4 +1,14 @@
+#
+#
+# This config should be noted in TOML.
+# See also https://github.com/toml-lang/toml
+
 [Server]
 port    = 8000
-endpoint = ""
+endpoint = "localhost"
 debug = true
+
+[Log]
+accesslog = "access.log"
+serverlog = "server.log"
+level = "DEBUG"

@@ -3,4 +3,6 @@ ignore:
   - elv.tokyo/tavle
 import:
   - package: github.com/gorilla/websocket
+  - package: github.com/gorilla/handlers
   - package: github.com/BurntSushi/toml
+  - package: github.com/hashicorp/logutils
