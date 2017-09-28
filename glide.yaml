@@ -1,0 +1,5 @@
+package: elv.tokyo/tavle
+ignore:
+  - elv.tokyo/tavle
+import:
+  - package: github.com/gorilla/websocket
