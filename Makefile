@@ -11,19 +11,28 @@ LDFLAGS := -ldflags="-s -w -X \"main.Version=$(VERSION)\" -X \"main.Revision=$(R
 
 SUBPKGS := $(shell glide novendor)
 
-.PHONY: \
-	clean \
-	golint \
-	test \
-	testv
+.PHONY: all 
+all: test bin/$(NAME)
 
 bin/$(NAME): $(SRCS)
 	go build -a -tags netgo -installsuffix netgo $(LDFLAGS) -o bin/$(NAME)
 
+.PHONY: clean
 clean:
 	rm -fr bin/*
 	rm -fr vendor/*
 
+.PHONY: test testv bench
+test: deps golint
+	go test $(SUBPKGS)
+
+testv: test
+	go test -v $(SUBPKGS)
+
+bench: test
+	go test -bench . ./... -benchmem
+
+.PHONY: golint
 golint:
 	@for d in $(SUBPKGS); do \
 	  golint $$d;\
