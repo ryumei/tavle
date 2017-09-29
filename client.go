@@ -36,13 +36,16 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// Subscription
+/*
 type Subscription struct {
 	conn *Client
 	room string
 }
+*/
 
 // Client is a middleman between the websocket connection and the hub.
-type Client struct {
+type Subscription struct {
 	hub *Hub
 
 	// The websocket connection
@@ -60,9 +63,9 @@ type Client struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump() {
+func (c *Subscription) readPump() {
 	defer func() {
-		c.hub.unregister <- Subscription{c, c.room} // TODO room?
+		c.hub.unregister <- *c
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -80,7 +83,19 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- MessageEnvelope{message, c.room}
+		/*
+			Email    string `json:"email"`
+			Username string `json:"username"`
+			Message  string `json:"message"`
+			Room string `json:"message"`
+		*/
+		log.Printf("[DEBUG] %s", message)
+		c.hub.broadcast <- Message{
+			Email:    "hello@example.com",
+			Username: "John",
+			Message:  string(message),
+			Room:     c.room,
+		}
 	}
 }
 
@@ -89,7 +104,7 @@ func (c *Client) readPump() {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Client) writePump() {
+func (c *Subscription) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -137,8 +152,8 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	client.hub.register <- Subscription{client, client.room} //TODO
+	client := &Subscription{hub: hub, conn: conn, send: make(chan []byte, 256), room: "main"}
+	client.hub.register <- *client
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
 	go client.writePump()
