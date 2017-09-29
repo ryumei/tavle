@@ -14,13 +14,13 @@ func TestValidCase(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(handleConnections))
 	defer ts.Close()
 
-	client1, err := Client(ts)
+	client1, err := WSClient(ts)
 	if err != nil {
 		t.Fatalf("Failed to create a client. %v", err)
 	}
 	defer client1.Close()
 
-	client2, err := Client(ts)
+	client2, err := WSClient(ts)
 	if err != nil {
 		t.Fatalf("Failed to create a client. %v", err)
 	}
@@ -30,6 +30,7 @@ func TestValidCase(t *testing.T) {
 		Email:    "room1",
 		Username: "John",
 		Message:  "my message",
+		//TODO Room
 	}
 	payload, err := json.Marshal(expected)
 	if err != nil {
@@ -55,6 +56,6 @@ func TestValidCase(t *testing.T) {
 	}
 
 	if expected != *result {
-		t.Errorf("Response is not valid '%v' != '%v'", payload, res)
+		t.Errorf("Response is not valid '%s' <> '%s'", payload, res)
 	}
 }

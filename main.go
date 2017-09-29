@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -53,14 +55,12 @@ type LogConfig struct {
 var clients = make(map[*websocket.Conn]bool) // connected clients
 var broadcast = make(chan Message)           // broadcast channel
 
-// Configure the upgrader
-var upgrader = websocket.Upgrader{}
-
 // Message is message object
 type Message struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Message  string `json:"message"`
+	// TODO room id
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
@@ -131,9 +131,63 @@ func logConfig(conf LogConfig) {
 
 var r *http.ServeMux
 
+type LineOfLog struct {
+	RemoteAddr  string
+	ContentType string
+	Path        string
+	Query       string
+	Method      string
+	Body        string
+}
+
+var TemplateOfLog = `
+Remote address:   {{.RemoteAddr}}
+Content-Type:     {{.ContentType}}
+HTTP method:      {{.Method}}
+
+path:
+{{.Path}}
+
+query string:
+{{.Query}}
+
+body:             
+{{.Body}}
+
+`
+
+func logRequest(r *http.Request) {
+	bufbody := new(bytes.Buffer)
+	bufbody.ReadFrom(r.Body)
+	body := bufbody.String()
+
+	line := LineOfLog{
+		r.RemoteAddr,
+		r.Header.Get("Content-Type"),
+		r.URL.Path,
+		r.URL.RawQuery,
+		r.Method,
+		body,
+	}
+	tmpl, err := template.New("line").Parse(TemplateOfLog)
+	if err != nil {
+		panic(err)
+	}
+
+	bufline := new(bytes.Buffer)
+	err = tmpl.Execute(bufline, line)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf(bufline.String())
+}
+
 // registHandlers maps URL paths to handler functions
 func registHandlers(logPath string) {
 	logger := openLogFile(logPath)
+
+	hub := newHub()
+	go hub.run()
 
 	r = http.NewServeMux()
 
@@ -141,11 +195,12 @@ func registHandlers(logPath string) {
 	r.Handle("/", handlers.LoggingHandler(logger, http.FileServer(http.Dir("./public"))))
 
 	// Configure websocket route
-	for route, f := range map[string]func(http.ResponseWriter, *http.Request){
-		"/ws": handleConnections,
-	} {
-		r.Handle(route, handlers.LoggingHandler(logger, http.HandlerFunc(f)))
-	}
+	r.Handle("/ws", handlers.LoggingHandler(logger, http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			logRequest(r)
+			serveWs(hub, w, r)
+		},
+	)))
 
 	go handleMessages()
 }

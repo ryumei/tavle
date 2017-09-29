@@ -32,6 +32,7 @@ new Vue({
                         email: this.email,
                         username: this.username,
                         message: $('<p>').html(this.newMsg).text() // Strip out html
+                        // TODO room ID
                     }
                 ));
                 this.newMsg = ''; // Reset newMsg
@@ -46,6 +47,7 @@ new Vue({
                 Materialize.toast('You must choose a username', 2000);
                 return
             }
+            // TODO room name
             this.email = $('<p>').html(this.email).text();
             this.username = $('<p>').html(this.username).text();
             this.joined = true;
