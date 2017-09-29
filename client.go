@@ -36,22 +36,14 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// Subscription
-/*
-type Subscription struct {
-	conn *Client
-	room string
-}
-*/
-
-// Client is a middleman between the websocket connection and the hub.
+// Subscription is a client middleman between the websocket connection and the hub.
 type Subscription struct {
 	hub *Hub
 
 	// The websocket connection
 	conn *websocket.Conn
 
-	//Buffered channel of outbound messages
+	// Buffered channel of outbound messages
 	send chan []byte
 
 	// Joined room

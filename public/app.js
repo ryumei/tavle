@@ -7,6 +7,7 @@ new Vue({
         chatContent: '', // A running list of chat messages displayed on the screen
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
+        room: null, // Unique room name
         joined: false // True if email and username have been filled in
     },
     created: function() {
@@ -31,8 +32,8 @@ new Vue({
                     JSON.stringify({
                         email: this.email,
                         username: this.username,
+                        room: this.room,
                         message: $('<p>').html(this.newMsg).text() // Strip out html
-                        // TODO room ID
                     }
                 ));
                 this.newMsg = ''; // Reset newMsg
@@ -47,9 +48,12 @@ new Vue({
                 Materialize.toast('You must choose a username', 2000);
                 return
             }
-            // TODO room name
+            if (!this.room) {
+                this.room = "Public"
+            }
             this.email = $('<p>').html(this.email).text();
             this.username = $('<p>').html(this.username).text();
+            this.room = $('<p>').html(this.room).text();
             this.joined = true;
         },
         gravatarURL: function(email) {
