@@ -1,6 +1,6 @@
-package: elv.tokyo/tavle
+package: github.com/ryumei/tavle
 ignore:
-  - elv.tokyo/tavle
+  - github.com/ryumei/tavle
 import:
   - package: github.com/gorilla/websocket
   - package: github.com/gorilla/handlers
