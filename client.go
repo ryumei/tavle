@@ -36,6 +36,11 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+type Subscription struct {
+	conn *Client
+	room string
+}
+
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
 	hub *Hub
@@ -45,6 +50,9 @@ type Client struct {
 
 	//Buffered channel of outbound messages
 	send chan []byte
+
+	// Joined room
+	room string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -54,7 +62,7 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
+		c.hub.unregister <- Subscription{c, c.room} // TODO room?
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -72,7 +80,7 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		c.hub.broadcast <- MessageEnvelope{message, c.room}
 	}
 }
 
@@ -130,7 +138,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	client.hub.register <- client
+	client.hub.register <- Subscription{client, client.room} //TODO
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
 	go client.writePump()
