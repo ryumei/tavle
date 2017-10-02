@@ -43,7 +43,7 @@ type Subscription struct {
 	// The websocket connection
 	conn *websocket.Conn
 
-	// Buffered channel of outbound messages
+	// Buffered channel of outbound messages as raw json
 	send chan []byte
 
 	// Joined room
@@ -75,13 +75,9 @@ func (c *Subscription) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		/*
-			Email    string `json:"email"`
-			Username string `json:"username"`
-			Message  string `json:"message"`
-			Room string `json:"message"`
-		*/
 		log.Printf("[DEBUG] %s", message)
+
+		//TODO select target room?
 		c.hub.broadcast <- Message{
 			Email:    "hello@example.com",
 			Username: "John",
