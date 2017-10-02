@@ -9,6 +9,6 @@ endpoint = "localhost"
 debug = true
 
 [Log]
-accesslog = "access.log"
-serverlog = "server.log"
+accessLog = "access.log"
+serverLog = "server.log"
 level = "DEBUG"
