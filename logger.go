@@ -1,5 +1,15 @@
 package main
 
+import (
+	"bytes"
+	"html/template"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/hashicorp/logutils"
+)
+
 type LineOfLog struct {
 	RemoteAddr  string
 	ContentType string
@@ -50,4 +60,36 @@ func LogRequest(r *http.Request) {
 		panic(err)
 	}
 	log.Printf(bufline.String())
+}
+
+func openLogFile(logPath string) *os.File {
+	logWriter, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return os.Stderr
+	}
+	return logWriter
+}
+
+// LogConfig is configuration for logging
+type LogConfig struct {
+	accessLog string
+	serverLog string
+	Level     string
+}
+
+func ConfigLogging(conf LogConfig) {
+	logWriter := openLogFile(conf.serverLog)
+
+	// Logging with logutils
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel(conf.Level),
+		Writer:   logWriter,
+	}
+	log.SetOutput(filter)
+	logFlags := log.LstdFlags | log.Lmicroseconds | log.LUTC
+	if filter.MinLevel == "DEBUG" {
+		logFlags |= log.Lshortfile
+	}
+	log.SetFlags(logFlags)
 }

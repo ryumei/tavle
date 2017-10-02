@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -17,7 +15,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/websocket"
-	"github.com/hashicorp/logutils"
 )
 
 /*
@@ -44,19 +41,12 @@ type ServerConfig struct {
 	Debug    bool
 }
 
-// LogConfig is configuration for logging
-type LogConfig struct {
-	accessLog string
-	serverLog string
-	Level     string
-}
-
 // Global variables are usually a bad practice but we will use them this time for simplicity.
 var clients = make(map[*websocket.Conn]bool) // connected clients
 var broadcast = make(chan Message)           // broadcast channel
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade initial GET request to a websocket
+	// Upgrade protocol initial GET request to a websocket
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -96,34 +86,7 @@ func handleMessages() {
 	}
 }
 
-func openLogFile(logPath string) *os.File {
-	logWriter, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return os.Stderr
-	}
-	return logWriter
-}
-
-func logConfig(conf LogConfig) {
-	logWriter := openLogFile(conf.serverLog)
-
-	// Logging with logutils
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
-		MinLevel: logutils.LogLevel(conf.Level),
-		Writer:   logWriter,
-	}
-	log.SetOutput(filter)
-	logFlags := log.LstdFlags | log.Lmicroseconds | log.LUTC
-	if filter.MinLevel == "DEBUG" {
-		logFlags |= log.Lshortfile
-	}
-	log.SetFlags(logFlags)
-}
-
 var r *http.ServeMux
-
-
 
 // registHandlers maps URL paths to handler functions
 func registHandlers(logPath string) {
@@ -159,7 +122,7 @@ func init() {
 		log.Println(err)
 		log.Fatalln("Failed to load config file.", confPath)
 	}
-	logConfig(config.Log)
+	ConfigLogging(config.Log)
 
 	// handler on http endpoint
 	registHandlers(config.Log.accessLog)

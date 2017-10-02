@@ -140,6 +140,9 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	LogRequest(r) //DEBUG
+
+	//TODO get room name
 	client := &Subscription{hub: hub, conn: conn, send: make(chan []byte, 256), room: "main"}
 	client.hub.register <- *client
 
