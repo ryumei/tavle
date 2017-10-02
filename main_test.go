@@ -30,7 +30,7 @@ func TestValidCase(t *testing.T) {
 		Email:    "room1",
 		Username: "John",
 		Message:  "my message",
-		//TODO Room
+		Room:     "my room",
 	}
 	payload, err := json.Marshal(expected)
 	if err != nil {
