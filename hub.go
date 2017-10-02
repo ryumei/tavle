@@ -1,16 +1,13 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
+
+import "log"
 
 // Message is message object
 type Message struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Message  string `json:"message"`
-	// TODO room id
-	Room string `json:"message"`
+	Room     string `json:"room"`
 }
 
 /*
@@ -20,8 +17,7 @@ type MessageEnvelope struct {
 }
 */
 
-// hub maintains the set of active clients and broadcasts messages to the
-// clients.
+// Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 	// Registered connected clients in rooms.
 	rooms map[string]map[*Subscription]bool
@@ -48,34 +44,38 @@ func newHub() *Hub {
 func (h *Hub) run() {
 	for {
 		select {
-		case s := <-h.register:
-			connections := h.rooms[s.room]
+		case sub := <-h.register:
+			connections := h.rooms[sub.room]
 			if connections == nil {
 				connections = make(map[*Subscription]bool)
-				h.rooms[s.room] = connections
+				h.rooms[sub.room] = connections
 			}
-			connections[&s] = true
-		case s := <-h.unregister:
-			connections := h.rooms[s.room]
+			connections[&sub] = true
+		case sub := <-h.unregister:
+			connections := h.rooms[sub.room]
 			if connections != nil {
-				if _, ok := connections[&s]; ok {
-					delete(connections, &s)
-					close(s.send)
+				if _, ok := connections[&sub]; ok {
+					delete(connections, &sub)
+					close(sub.send)
 					if len(connections) == 0 { // Close a room
-						delete(h.rooms, s.room)
+						delete(h.rooms, sub.room)
 					}
 				}
 			}
-		case message := <-h.broadcast:
-			connections := h.rooms[message.Room]
-			for client := range connections {
+		case msg := <-h.broadcast:
+			connections := h.rooms[msg.Room]
+			for sub := range connections {
 				select {
-				case client.send <- []byte(message.Message):
+				case sub.send <- []byte(msg.Message):
+					//TODO switch room
+					log.Printf("[DEBUG] %s", sub.room)
+					log.Printf("[DEBUG] %s", msg.Message)
+					//TODO?
 				default:
-					close(client.send)
-					delete(connections, client)
-					if len(connections) == 0 {
-						delete(h.rooms, message.Room)
+					close(sub.send)
+					delete(connections, sub)
+					if len(connections) == 0 { // Close a room
+						delete(h.rooms, msg.Room)
 					}
 				}
 			}

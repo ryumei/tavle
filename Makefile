@@ -79,7 +79,7 @@ endif
 
 .PHONY: deps
 deps: glide
-	glide install update
+	glide install
 
 .PHONY: dist-src
 dist-src:

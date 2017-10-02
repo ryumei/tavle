@@ -30,7 +30,7 @@ func TestValidCase(t *testing.T) {
 		Email:    "room1",
 		Username: "John",
 		Message:  "my message",
-		//TODO Room
+		Room:     "my room",
 	}
 	payload, err := json.Marshal(expected)
 	if err != nil {
@@ -56,6 +56,6 @@ func TestValidCase(t *testing.T) {
 	}
 
 	if expected != *result {
-		t.Errorf("Response is not valid '%s' <> '%s'", payload, res)
+		t.Errorf("Response is not valid '%s' <> '%s'", expected, *result)
 	}
 }

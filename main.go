@@ -46,8 +46,8 @@ type ServerConfig struct {
 
 // LogConfig is configuration for logging
 type LogConfig struct {
-	accesslog string
-	ServerLog string
+	accessLog string
+	serverLog string
 	Level     string
 }
 
@@ -105,7 +105,7 @@ func openLogFile(logPath string) *os.File {
 }
 
 func logConfig(conf LogConfig) {
-	logWriter := openLogFile(conf.ServerLog)
+	logWriter := openLogFile(conf.serverLog)
 
 	// Logging with logutils
 	filter := &logutils.LevelFilter{
@@ -123,56 +123,7 @@ func logConfig(conf LogConfig) {
 
 var r *http.ServeMux
 
-type LineOfLog struct {
-	RemoteAddr  string
-	ContentType string
-	Path        string
-	Query       string
-	Method      string
-	Body        string
-}
 
-var TemplateOfLog = `
-Remote address:   {{.RemoteAddr}}
-Content-Type:     {{.ContentType}}
-HTTP method:      {{.Method}}
-
-path:
-{{.Path}}
-
-query string:
-{{.Query}}
-
-body:             
-{{.Body}}
-
-`
-
-func logRequest(r *http.Request) {
-	bufbody := new(bytes.Buffer)
-	bufbody.ReadFrom(r.Body)
-	body := bufbody.String()
-
-	line := LineOfLog{
-		r.RemoteAddr,
-		r.Header.Get("Content-Type"),
-		r.URL.Path,
-		r.URL.RawQuery,
-		r.Method,
-		body,
-	}
-	tmpl, err := template.New("line").Parse(TemplateOfLog)
-	if err != nil {
-		panic(err)
-	}
-
-	bufline := new(bytes.Buffer)
-	err = tmpl.Execute(bufline, line)
-	if err != nil {
-		panic(err)
-	}
-	log.Printf(bufline.String())
-}
 
 // registHandlers maps URL paths to handler functions
 func registHandlers(logPath string) {
@@ -189,7 +140,7 @@ func registHandlers(logPath string) {
 	// Configure websocket route
 	r.Handle("/ws", handlers.LoggingHandler(logger, http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			logRequest(r)
+			LogRequest(r)
 			serveWs(hub, w, r)
 		},
 	)))
@@ -211,7 +162,7 @@ func init() {
 	logConfig(config.Log)
 
 	// handler on http endpoint
-	registHandlers(config.Log.accesslog)
+	registHandlers(config.Log.accessLog)
 }
 
 var activeConnWaiting sync.WaitGroup
