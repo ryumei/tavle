@@ -46,8 +46,8 @@ type ServerConfig struct {
 
 // LogConfig is configuration for logging
 type LogConfig struct {
-	accesslog string
-	ServerLog string
+	accessLog string
+	serverLog string
 	Level     string
 }
 
@@ -105,7 +105,7 @@ func openLogFile(logPath string) *os.File {
 }
 
 func logConfig(conf LogConfig) {
-	logWriter := openLogFile(conf.ServerLog)
+	logWriter := openLogFile(conf.serverLog)
 
 	// Logging with logutils
 	filter := &logutils.LevelFilter{
@@ -211,7 +211,7 @@ func init() {
 	logConfig(config.Log)
 
 	// handler on http endpoint
-	registHandlers(config.Log.accesslog)
+	registHandlers(config.Log.accessLog)
 }
 
 var activeConnWaiting sync.WaitGroup
