@@ -10,7 +10,7 @@ type Message struct {
 	Username string `json:"username"`
 	Message  string `json:"message"`
 	// TODO room id
-	Room string `json:"message"`
+	Room string `json:"room"`
 }
 
 /*

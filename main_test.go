@@ -56,6 +56,6 @@ func TestValidCase(t *testing.T) {
 	}
 
 	if expected != *result {
-		t.Errorf("Response is not valid '%s' <> '%s'", payload, res)
+		t.Errorf("Response is not valid '%s' <> '%s'", expected, *result)
 	}
 }
