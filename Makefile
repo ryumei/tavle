@@ -79,11 +79,9 @@ endif
 
 .PHONY: deps
 deps: glide
-	glide install
-	glide update
+	glide install update
 
 .PHONY: dist-src
 dist-src:
 	git archive --format=zip -o $(NAME)-src.$(VERSION).zip HEAD
-
 
