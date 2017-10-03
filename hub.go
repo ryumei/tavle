@@ -45,6 +45,7 @@ func (h *Hub) run() {
 	for {
 		select {
 		case sub := <-h.register:
+			log.Printf("[DEBUG] hub register")
 			connections := h.rooms[sub.room]
 			if connections == nil {
 				connections = make(map[*Subscription]bool)
@@ -52,6 +53,8 @@ func (h *Hub) run() {
 			}
 			connections[&sub] = true
 		case sub := <-h.unregister:
+			log.Printf("[DEBUG] hub unregister")
+
 			connections := h.rooms[sub.room]
 			if connections != nil {
 				if _, ok := connections[&sub]; ok {
@@ -63,15 +66,19 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
+			log.Printf("[DEBUG] hub boradcast") // from readPump
 			connections := h.rooms[msg.Room]
 			for sub := range connections {
 				select {
 				case sub.send <- []byte(msg.Message):
+					log.Printf("[DEBUG] hub send")
+
 					//TODO switch room
-					log.Printf("[DEBUG] %s", sub.room)
-					log.Printf("[DEBUG] %s", msg.Message)
+					log.Printf("[DEBUG] room: %s", sub.room)
+					log.Printf("[DEBUG] message: %s", msg.Message)
 					//TODO?
 				default:
+					log.Printf("[DEBUG] hub default close connection")
 					close(sub.send)
 					delete(connections, sub)
 					if len(connections) == 0 { // Close a room

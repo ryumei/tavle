@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -66,24 +67,31 @@ func (c *Subscription) readPump() {
 		c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+	log.Printf("[DEBUG] readPump initiated")
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, rawMessage, err := c.conn.ReadMessage()
+		log.Printf("[DEBUG] readPump loop, %s", rawMessage) // "send" called
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("[ERROR] %v", err)
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		log.Printf("[DEBUG] %s", message)
+		rawMessage = bytes.TrimSpace(bytes.Replace(rawMessage, newline, space, -1))
+		var m Message
+		json.Unmarshal(rawMessage, &m)
+		log.Printf("[DEBUG] %v", m)
 
-		//TODO select target room?
-		c.hub.broadcast <- Message{
-			Email:    "hello@example.com",
-			Username: "John",
-			Message:  string(message),
-			Room:     c.room,
-		}
+		c.hub.broadcast <- m
+
+		/*
+			Message{
+				Email:    m.Email,
+				Username: m.Username,
+				Message:  m.Message,
+				Room:     m.Room,
+			}
+		*/
 	}
 }
 
@@ -100,8 +108,8 @@ func (c *Subscription) writePump() {
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
-			log.Println("[DEBUG] called send")
+		case message, ok := <-c.send: // from client
+			log.Printf("[DEBUG] writePump called send '%s'", message)
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -109,24 +117,34 @@ func (c *Subscription) writePump() {
 				return
 			}
 
+			log.Printf("[DEBUG] writePump 2")
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
+				log.Printf("[ERROR] %v", err)
 				return
 			}
+			log.Printf("[DEBUG] writePump 3")
 			w.Write(message)
+			log.Printf("[DEBUG] writePump 4")
+
+			// c.send???
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
+				log.Printf("[DEBUG] writePump i%d", i)
 				w.Write(newline)
 				w.Write(<-c.send)
 			}
 
 			if err := w.Close(); err != nil {
+				log.Printf("[ERROR] %v", err)
 				return
 			}
+			log.Printf("[DEBUG] writePump 5")
+
 		case <-ticker.C:
-			log.Println("[DEBUG] called ticker")
+			log.Println("[DEBUG] writePump called ticker")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
@@ -142,7 +160,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Printf("[DEBUG] HELLO upgraded connection")
+	log.Printf("[DEBUG] serveWs connection upgraded")
 	LogRequest(r) //DEBUG
 
 	//TODO get room name

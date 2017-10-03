@@ -49,7 +49,7 @@ new Vue({
                 return
             }
             if (!this.room) {
-                this.room = "Public"
+                this.room = "main"
             }
             this.email = $('<p>').html(this.email).text();
             this.username = $('<p>').html(this.username).text();
