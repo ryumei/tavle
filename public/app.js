@@ -55,6 +55,17 @@ new Vue({
             this.username = $('<p>').html(this.username).text();
             this.room = $('<p>').html(this.room).text();
             this.joined = true;
+            /*
+            this.ws.send(
+                JSON.stringify({
+                    email: this.email,
+                    username: this.username,
+                    room: this.room,
+                    message: "--JOIN--"
+                }
+            ));
+            this.newMsg = '';
+            */
         },
         gravatarURL: function(email) {
             return 'http://www.gravatar.com/avatar/' + CryptoJS.MD5(email);

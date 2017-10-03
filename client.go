@@ -101,6 +101,7 @@ func (c *Subscription) writePump() {
 	for {
 		select {
 		case message, ok := <-c.send:
+			log.Println("[DEBUG] called send")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -125,6 +126,7 @@ func (c *Subscription) writePump() {
 				return
 			}
 		case <-ticker.C:
+			log.Println("[DEBUG] called ticker")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
@@ -140,6 +142,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	log.Printf("[DEBUG] HELLO upgraded connection")
 	LogRequest(r) //DEBUG
 
 	//TODO get room name
