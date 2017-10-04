@@ -117,17 +117,12 @@ func (c *Subscription) writePump() {
 				return
 			}
 
-			log.Printf("[DEBUG] writePump 2")
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				log.Printf("[ERROR] %v", err)
 				return
 			}
-			log.Printf("[DEBUG] writePump 3")
 			w.Write(message)
-			log.Printf("[DEBUG] writePump 4")
-
-			// c.send???
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
@@ -141,7 +136,6 @@ func (c *Subscription) writePump() {
 				log.Printf("[ERROR] %v", err)
 				return
 			}
-			log.Printf("[DEBUG] writePump 5")
 
 		case <-ticker.C:
 			log.Println("[DEBUG] writePump called ticker")
