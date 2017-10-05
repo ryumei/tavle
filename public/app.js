@@ -14,6 +14,8 @@ new Vue({
         var self = this;
         this.ws = new WebSocket('ws://' + window.location.host + '/ws');
         this.ws.addEventListener('message', function(e) {
+            console.log('[DEBUG] Receive data from the server');
+            console.log(e.data);
             var msg = JSON.parse(e.data);
             self.chatContent += '<div class="chip">'
                     + '<img src="' + self.gravatarURL(msg.email) + '">' // Avatar

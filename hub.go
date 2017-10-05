@@ -1,6 +1,7 @@
 package main
 
 import "log"
+import "encoding/json"
 
 // Message is message object
 type Message struct {
@@ -59,14 +60,18 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
-			log.Printf("[DEBUG] hub boradcast")         // from readPump
-			log.Printf("[DEBUG] msg.Room %s", msg.Room) // from readPump
+			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // from readPump
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections)) // from readPump
 
 			for sub := range connections {
+				rawMessage, err := json.Marshal(msg)
+				if err != nil {
+					log.Printf("[ERROR] Failed to marshaling %v", msg)
+				}
 				select {
-				case sub.send <- []byte(msg.Message):
+				case sub.send <- rawMessage:
+					//case sub.send <- []byte(msg.Message):
 					log.Printf("[DEBUG] hub send")
 
 					//TODO switch room
