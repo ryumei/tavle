@@ -39,9 +39,10 @@ func (h *Hub) run() {
 	for {
 		select {
 		case sub := <-h.register:
-			log.Printf("[DEBUG] hub register")
+			log.Printf("[DEBUG] hub register %s", sub.room)
 			connections := h.rooms[sub.room]
 			if connections == nil {
+				log.Printf("[DEBUG] Create a new room %s", sub.room)
 				connections = make(map[*Subscription]bool)
 				h.rooms[sub.room] = connections
 			}

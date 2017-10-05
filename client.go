@@ -83,15 +83,6 @@ func (c *Subscription) readPump() {
 		log.Printf("[DEBUG] %v", m)
 
 		c.hub.broadcast <- m
-
-		/*
-			Message{
-				Email:    m.Email,
-				Username: m.Username,
-				Message:  m.Message,
-				Room:     m.Room,
-			}
-		*/
 	}
 }
 

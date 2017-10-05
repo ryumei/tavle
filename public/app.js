@@ -51,23 +51,15 @@ new Vue({
                 return
             }
             if (!this.room) {
-                this.room = "main"
+                this.room = "entrance"
             }
             this.email = $('<p>').html(this.email).text();
             this.username = $('<p>').html(this.username).text();
             this.room = $('<p>').html(this.room).text();
             this.joined = true;
-            /*
-            this.ws.send(
-                JSON.stringify({
-                    email: this.email,
-                    username: this.username,
-                    room: this.room,
-                    message: "--JOIN--"
-                }
-            ));
-            this.newMsg = '';
-            */
+
+            this.newMsg = this.username + " joined to " + this.room;
+            this.send();
         },
         gravatarURL: function(email) {
             return 'http://www.gravatar.com/avatar/' + CryptoJS.MD5(email);

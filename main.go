@@ -74,6 +74,8 @@ func handleMessages() {
 	for {
 		// Grab the next message from the broadcast channel
 		msg := <-broadcast
+		log.Printf("[DEBUG] handleMassages")
+
 		// Send it out to every client that is currently connected
 		for client := range clients {
 			err := client.WriteJSON(msg)
@@ -90,8 +92,10 @@ var r *http.ServeMux
 
 // registHandlers maps URL paths to handler functions
 func registHandlers(logPath string) {
+	log.Printf("[DEBUG] registHandlers")
 	logger := openLogFile(logPath)
 
+	log.Printf("[DEBUG] registHandlers create a hub")
 	hub := newHub()
 	go hub.run()
 
@@ -108,7 +112,7 @@ func registHandlers(logPath string) {
 		},
 	)))
 
-	go handleMessages()
+	/////go handleMessages()
 }
 
 var config Config
