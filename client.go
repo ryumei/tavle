@@ -164,7 +164,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	LogRequest(r) //DEBUG
 
 	//TODO get room name
-	client := &Subscription{hub: hub, conn: conn, send: make(chan []byte, 256), room: "main"}
+	client := &Subscription{hub: hub, conn: conn, send: make(chan []byte, 256), room: "entrance"}
 	client.hub.register <- *client
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.

@@ -10,13 +10,6 @@ type Message struct {
 	Room     string `json:"room"`
 }
 
-/*
-type MessageEnvelope struct {
-	data []byte
-	room string
-}
-*/
-
 // Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 	// Registered connected clients in rooms.
@@ -66,8 +59,11 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
-			log.Printf("[DEBUG] hub boradcast") // from readPump
+			log.Printf("[DEBUG] hub boradcast")         // from readPump
+			log.Printf("[DEBUG] msg.Room %s", msg.Room) // from readPump
 			connections := h.rooms[msg.Room]
+			log.Printf("[DEBUG] # of connections %d", len(connections)) // from readPump
+
 			for sub := range connections {
 				select {
 				case sub.send <- []byte(msg.Message):
