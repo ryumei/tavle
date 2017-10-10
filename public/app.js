@@ -37,7 +37,8 @@ new Vue({
                 return
             }
             if (!this.room) {
-                this.room = "foyer"
+                this.room = "foyer";
+                console.log("[WARN] Use default roomname '" + this.room + "' instead of empty.");
             }
             this.email = $('<p>').html(this.email).text();
             this.username = $('<p>').html(this.username).text();

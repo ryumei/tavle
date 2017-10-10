@@ -11,8 +11,8 @@ type Message struct {
 	Room     string `json:"room"`
 }
 
-// Subscription is connection and joined room
-type Subscription struct {
+// subscription is connection and joined room
+type subscription struct {
 	conn *connection
 	room string
 }
@@ -26,22 +26,22 @@ type Hub struct {
 	broadcast chan Message
 
 	// Register requests from the clients.
-	register chan Subscription
+	register chan subscription
 
 	// Unregister requests from clients.
-	unregister chan Subscription
+	unregister chan subscription
 }
 
 func newHub() Hub {
 	return Hub{
 		broadcast:  make(chan Message),
-		register:   make(chan Subscription),
-		unregister: make(chan Subscription),
+		register:   make(chan subscription),
+		unregister: make(chan subscription),
 		rooms:      make(map[string]map[*connection]bool),
 	}
 }
 
-// h is the global hub
+// hub is the global hub
 var hub = newHub()
 
 func (h *Hub) run() {
@@ -72,7 +72,7 @@ func (h *Hub) run() {
 		case msg := <-h.broadcast:
 			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // from readPump
 			connections := h.rooms[msg.Room]
-			log.Printf("[DEBUG] # of connections %d", len(connections)) // from readPump
+			log.Printf("[DEBUG] # of connections %d", len(connections))
 
 			for c := range connections {
 				rawMessage, err := json.Marshal(msg)
