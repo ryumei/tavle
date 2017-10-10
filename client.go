@@ -134,13 +134,12 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Printf("[DEBUG] serveWs connection upgraded")
+	log.Printf("[DEBUG] The connection is upgraded")
 
 	sub := subscription{
 		conn: &connection{ws: conn, send: make(chan []byte, 256)},
 		room: vars["room"],
 	}
-
 	hub.register <- sub
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.

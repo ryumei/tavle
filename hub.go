@@ -3,7 +3,7 @@ package main
 import "log"
 import "encoding/json"
 
-// Message is message object
+// Message is a message object
 type Message struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
@@ -32,27 +32,23 @@ type Hub struct {
 	unregister chan subscription
 }
 
-func newHub() Hub {
-	return Hub{
-		broadcast:  make(chan Message),
-		register:   make(chan subscription),
-		unregister: make(chan subscription),
-		rooms:      make(map[string]map[*connection]bool),
-	}
-}
-
 // hub is the global hub
-var hub = newHub()
+var hub = Hub{
+	broadcast:  make(chan Message),
+	register:   make(chan subscription),
+	unregister: make(chan subscription),
+	rooms:      make(map[string]map[*connection]bool),
+}
 
 func (h *Hub) run() {
 	log.Printf("[DEBUG] hub run enter")
 	for {
 		select {
 		case sub := <-h.register:
-			log.Printf("[DEBUG] hub register '%s'", sub.room)
+			log.Printf("[DEBUG] hub register room '%s'", sub.room)
 			connections := h.rooms[sub.room]
 			if connections == nil {
-				log.Printf("[DEBUG] Create a new room %s", sub.room)
+				log.Printf("[DEBUG] Create a new room '%s'", sub.room)
 				connections = make(map[*connection]bool)
 				h.rooms[sub.room] = connections
 			}
@@ -70,14 +66,14 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
-			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // from readPump
+			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // called from readPump
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections))
 
 			for c := range connections {
 				rawMessage, err := json.Marshal(msg)
 				if err != nil {
-					log.Printf("[ERROR] Failed to marshaling %v", msg)
+					log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
 				}
 				select {
 				case c.send <- rawMessage:

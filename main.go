@@ -12,6 +12,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/gorilla/handlers"
+
 	"github.com/gorilla/mux"
 
 	"github.com/BurntSushi/toml"
@@ -21,22 +23,20 @@ import (
 /*
  * On build time, they will be set with -X option
  * Version software version
- * Revision sofotware revision
  */
 var (
 	Version  string
-	Revision string
 	distName string
 )
 
-// Config is master configuration
-type Config struct {
-	Server ServerConfig
-	Log    LogConfig
+// config is master configuration
+type config struct {
+	server serverConfig
+	log    LogConfig
 }
 
-// ServerConfig is configuration for websocket server
-type ServerConfig struct {
+// serverConfig is configuration for websocket server
+type serverConfig struct {
 	Port     uint
 	Endpoint string
 	Debug    bool
@@ -46,58 +46,13 @@ type ServerConfig struct {
 var clients = make(map[*websocket.Conn]bool) // connected clients
 var broadcast = make(chan Message)           // broadcast channel
 
-func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade protocol initial GET request to a websocket
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Make sure we close the connection when the function returns
-	defer ws.Close()
-
-	// Register our new client
-	clients[ws] = true
-
-	for {
-		var msg Message
-		err := ws.ReadJSON(&msg)
-		if err != nil {
-			log.Println("[ERROR] error: ", err)
-			delete(clients, ws)
-			break
-		}
-		// Send the newly received message to the bradcast channel
-		broadcast <- msg
-	}
-}
-
-func handleMessages() {
-	for {
-		// Grab the next message from the broadcast channel
-		msg := <-broadcast
-		log.Printf("[DEBUG] handleMassages")
-
-		// Send it out to every client that is currently connected
-		for client := range clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				log.Printf("error: %v", err)
-				client.Close()
-				delete(clients, client)
-			}
-		}
-	}
-}
-
-var r *mux.Router
-
 // registHandlers maps URL paths to handler functions
-func registHandlers(logPath string) {
+func registHandlers(logPath string) http.Handler {
 	log.Printf("[DEBUG] registHandlers")
-	//logger := openLogFile(logPath)
+	logger := openLogFile(logPath)
 	go hub.run()
 
-	r = mux.NewRouter()
+	r := mux.NewRouter()
 	// Configure websocket route
 	r.HandleFunc("/ws/{room}", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -107,24 +62,21 @@ func registHandlers(logPath string) {
 	// Create a simple file server
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public")))
 
-	log.Printf("[DEBUG] registHandlers exit")
+	return handlers.LoggingHandler(logger, r)
 }
 
-var config Config
+var conf config
 
 func init() {
 	var confPath string
 	flag.StringVar(&confPath, "c", "tavle.tml", "Path to config file")
 	flag.Parse()
 
-	if _, err := toml.DecodeFile(confPath, &config); err != nil {
+	if _, err := toml.DecodeFile(confPath, &conf); err != nil {
 		log.Println(err)
 		log.Fatalln("Failed to load config file.", confPath)
 	}
-	ConfigLogging(config.Log)
-
-	// handler on http endpoint
-	registHandlers(config.Log.accessLog)
+	ConfigLogging(conf.log)
 }
 
 var activeConnWaiting sync.WaitGroup
@@ -146,7 +98,7 @@ func main() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	binding := fmt.Sprintf("%v:%d", config.Server.Endpoint, config.Server.Port)
+	binding := fmt.Sprintf("%v:%d", conf.server.Endpoint, conf.server.Port)
 	log.Printf("[INFO] %s bound on %v", distName, binding)
 
 	laddr, _ := net.ResolveTCPAddr("tcp", binding)
@@ -167,7 +119,9 @@ func main() {
 		}
 	}()
 
-	server := &http.Server{Handler: r, ConnState: connectionStateChange}
+	// handler on http endpoint
+	router := registHandlers(conf.log.accessLog)
+	server := &http.Server{Handler: router, ConnState: connectionStateChange}
 	server.Serve(listener)
 	activeConnWaiting.Wait()
 
