@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -37,18 +38,13 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// Subscription is a client middleman between the websocket connection and the hub.
-type Subscription struct {
-	hub *Hub
+// connection is an middleman between the websocket connection and the hub.
+type connection struct {
+	// The websocket connection.
+	ws *websocket.Conn
 
-	// The websocket connection
-	conn *websocket.Conn
-
-	// Buffered channel of outbound messages as raw json
+	// Buffered channel of outbound messages.
 	send chan []byte
-
-	// Joined room
-	room string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -56,20 +52,21 @@ type Subscription struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Subscription) readPump() {
+func (sub Subscription) readPump() {
+	conn := sub.conn
 	defer func() {
-		c.hub.unregister <- *c
-		c.conn.Close()
+		hub.unregister <- sub
+		conn.ws.Close()
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	conn.ws.SetReadLimit(maxMessageSize)
+	conn.ws.SetReadDeadline(time.Now().Add(pongWait))
+	conn.ws.SetPongHandler(func(string) error {
+		conn.ws.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
 	log.Printf("[DEBUG] readPump initiated")
 	for {
-		_, rawMessage, err := c.conn.ReadMessage()
+		_, rawMessage, err := conn.ws.ReadMessage()
 		log.Printf("[DEBUG] readPump loop, %s", rawMessage) // "send" called
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
@@ -80,10 +77,15 @@ func (c *Subscription) readPump() {
 		rawMessage = bytes.TrimSpace(bytes.Replace(rawMessage, newline, space, -1))
 		var m Message
 		json.Unmarshal(rawMessage, &m)
-		log.Printf("[DEBUG] %v", m)
-
-		c.hub.broadcast <- m
+		log.Printf("[DEBUG] unmarshaled message struct %v", m)
+		hub.broadcast <- m
 	}
+}
+
+func (c *connection) write(mt int, payload []byte) error {
+	log.Printf("[DEBUG] write a payload")
+	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.ws.WriteMessage(mt, payload)
 }
 
 // writePump pumps messages from the hub to the websocket connection.
@@ -91,47 +93,31 @@ func (c *Subscription) readPump() {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Subscription) writePump() {
+func (sub *Subscription) writePump() {
+	conn := sub.conn
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		conn.ws.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-c.send: // from client
+		case message, ok := <-conn.send: // from client
 			log.Printf("[DEBUG] writePump called send '%s'", message)
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			conn.ws.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				conn.ws.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
+			if err := conn.write(websocket.TextMessage, message); err != nil {
 				log.Printf("[ERROR] %v", err)
 				return
 			}
-			w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				log.Printf("[DEBUG] writePump i%d", i)
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
-				log.Printf("[ERROR] %v", err)
-				return
-			}
-
 		case <-ticker.C:
 			log.Println("[DEBUG] writePump called ticker")
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			sub.conn.ws.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := conn.ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
@@ -141,21 +127,27 @@ func (c *Subscription) writePump() {
 // serveWs handles websocket requests from the peer.
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
+	vars := mux.Vars(r)
+	if vars["room"] == "" {
+		log.Printf("[WARN] Use default roomname instead of empty.")
+		vars["room"] = ""
+	}
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Printf("[DEBUG] serveWs connection upgraded")
-	LogRequest(r) //DEBUG
 
-	//TODO get room name
-	client := &Subscription{hub: hub, conn: conn, send: make(chan []byte, 256), room: "entrance"}
-	client.hub.register <- *client
+	sub := Subscription{
+		conn: &connection{ws: conn, send: make(chan []byte, 256)},
+		room: vars["room"],
+	}
+
+	hub.register <- sub
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
-	go client.writePump()
-	go client.readPump()
-
+	go sub.writePump()
+	go sub.readPump()
 }
 
 // WSClient is test websocket client

@@ -4,5 +4,6 @@ ignore:
 import:
   - package: github.com/gorilla/websocket
   - package: github.com/gorilla/handlers
+  - package: github.com/gorilla/mux
   - package: github.com/BurntSushi/toml
   - package: github.com/hashicorp/logutils

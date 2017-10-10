@@ -11,10 +11,16 @@ type Message struct {
 	Room     string `json:"room"`
 }
 
+// Subscription is connection and joined room
+type Subscription struct {
+	conn *connection
+	room string
+}
+
 // Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 	// Registered connected clients in rooms.
-	rooms map[string]map[*Subscription]bool
+	rooms map[string]map[*connection]bool
 
 	// Inbound messages from the clients.
 	broadcast chan Message
@@ -26,35 +32,38 @@ type Hub struct {
 	unregister chan Subscription
 }
 
-func newHub() *Hub {
-	return &Hub{
+func newHub() Hub {
+	return Hub{
 		broadcast:  make(chan Message),
 		register:   make(chan Subscription),
 		unregister: make(chan Subscription),
-		rooms:      make(map[string]map[*Subscription]bool),
+		rooms:      make(map[string]map[*connection]bool),
 	}
 }
 
+// h is the global hub
+var hub = newHub()
+
 func (h *Hub) run() {
+	log.Printf("[DEBUG] hub run enter")
 	for {
 		select {
 		case sub := <-h.register:
-			log.Printf("[DEBUG] hub register %s", sub.room)
+			log.Printf("[DEBUG] hub register '%s'", sub.room)
 			connections := h.rooms[sub.room]
 			if connections == nil {
 				log.Printf("[DEBUG] Create a new room %s", sub.room)
-				connections = make(map[*Subscription]bool)
+				connections = make(map[*connection]bool)
 				h.rooms[sub.room] = connections
 			}
-			connections[&sub] = true
+			connections[sub.conn] = true
 		case sub := <-h.unregister:
 			log.Printf("[DEBUG] hub unregister")
-
 			connections := h.rooms[sub.room]
 			if connections != nil {
-				if _, ok := connections[&sub]; ok {
-					delete(connections, &sub)
-					close(sub.send)
+				if _, ok := connections[sub.conn]; ok {
+					delete(connections, sub.conn)
+					close(sub.conn.send)
 					if len(connections) == 0 { // Close a room
 						delete(h.rooms, sub.room)
 					}
@@ -65,24 +74,18 @@ func (h *Hub) run() {
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections)) // from readPump
 
-			for sub := range connections {
+			for c := range connections {
 				rawMessage, err := json.Marshal(msg)
 				if err != nil {
 					log.Printf("[ERROR] Failed to marshaling %v", msg)
 				}
 				select {
-				case sub.send <- rawMessage:
-					//case sub.send <- []byte(msg.Message):
-					log.Printf("[DEBUG] hub send")
-
-					//TODO switch room
-					log.Printf("[DEBUG] room: %s", sub.room)
-					log.Printf("[DEBUG] message: %s", msg.Message)
-					//TODO?
+				case c.send <- rawMessage:
+					log.Printf("[DEBUG] hub send [%s]: %s", msg.Room, msg.Message)
 				default:
 					log.Printf("[DEBUG] hub default close connection")
-					close(sub.send)
-					delete(connections, sub)
+					close(c.send)
+					delete(connections, c)
 					if len(connections) == 0 { // Close a room
 						delete(h.rooms, msg.Room)
 					}

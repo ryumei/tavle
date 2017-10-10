@@ -11,21 +11,7 @@ new Vue({
         joined: false // True if email and username have been filled in
     },
     created: function() {
-        var self = this;
-        this.ws = new WebSocket('ws://' + window.location.host + '/ws');
-        this.ws.addEventListener('message', function(e) {
-            console.log('[DEBUG] Receive data from the server');
-            console.log(e.data);
-            var msg = JSON.parse(e.data);
-            self.chatContent += '<div class="chip">'
-                    + '<img src="' + self.gravatarURL(msg.email) + '">' // Avatar
-                    + msg.username
-                + '</div>'
-                + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
-
-            var element = document.getElementById('chat-messages');
-            element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
-        });
+        console.log("[DEBUG] created");
     },
     methods: {
         send: function () {
@@ -51,15 +37,30 @@ new Vue({
                 return
             }
             if (!this.room) {
-                this.room = "entrance"
+                this.room = "foyer"
             }
             this.email = $('<p>').html(this.email).text();
             this.username = $('<p>').html(this.username).text();
             this.room = $('<p>').html(this.room).text();
             this.joined = true;
 
-            this.newMsg = this.username + " joined to " + this.room;
-            this.send();
+            // Initialize WebSocket connection
+            var self = this;
+            this.ws = new WebSocket('ws://' + window.location.host + '/ws/' + this.room);
+            //this.ws = new WebSocket('ws://' + window.location.host + '/ws');
+            this.ws.addEventListener('message', function(e) {
+                console.log('[DEBUG] Receive data from the server');
+                console.log(e.data);
+                var msg = JSON.parse(e.data);
+                self.chatContent += '<div class="chip">'
+                        + '<img src="' + self.gravatarURL(msg.email) + '">' // Avatar
+                        + msg.username
+                    + '</div>'
+                    + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
+    
+                var element = document.getElementById('chat-messages');
+                element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
+            });
         },
         gravatarURL: function(email) {
             return 'http://www.gravatar.com/avatar/' + CryptoJS.MD5(email);

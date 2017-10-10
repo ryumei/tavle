@@ -12,8 +12,9 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/gorilla/mux"
+
 	"github.com/BurntSushi/toml"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/websocket"
 )
 
@@ -88,31 +89,25 @@ func handleMessages() {
 	}
 }
 
-var r *http.ServeMux
+var r *mux.Router
 
 // registHandlers maps URL paths to handler functions
 func registHandlers(logPath string) {
 	log.Printf("[DEBUG] registHandlers")
-	logger := openLogFile(logPath)
-
-	log.Printf("[DEBUG] registHandlers create a hub")
-	hub := newHub()
+	//logger := openLogFile(logPath)
 	go hub.run()
 
-	r = http.NewServeMux()
-
-	// Create a simple file server
-	r.Handle("/", handlers.LoggingHandler(logger, http.FileServer(http.Dir("./public"))))
-
+	r = mux.NewRouter()
 	// Configure websocket route
-	r.Handle("/ws", handlers.LoggingHandler(logger, http.HandlerFunc(
+	r.HandleFunc("/ws/{room}", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			LogRequest(r)
-			serveWs(hub, w, r)
+			serveWs(&hub, w, r)
 		},
-	)))
+	))
+	// Create a simple file server
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public")))
 
-	/////go handleMessages()
+	log.Printf("[DEBUG] registHandlers exit")
 }
 
 var config Config
