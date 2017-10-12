@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -126,9 +127,11 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	// var 'room' is expect in the URL path of WebSocket '/ws/{room}'
 	vars := mux.Vars(r)
-	if vars["room"] == "" {
-		vars["room"] = "foyer"
+	room := vars["room"]
+	if room == "" {
+		room = "foyer"
 		log.Printf("[WARN] Use default roomname '%s' instead of empty.", vars["room"])
+	} else {
 	}
 	if err != nil {
 		log.Println(err)
@@ -138,11 +141,24 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 	sub := subscription{
 		conn: &connection{ws: conn, send: make(chan []byte, 256)},
-		room: vars["room"],
+		room: room,
 	}
 	hub.register <- sub
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
 	go sub.writePump()
 	go sub.readPump()
+
+	welcomMessage := Message{
+		Email:    "admin@example.com",
+		Username: "Tavle Admin",
+		Message:  fmt.Sprintf("Welcome to room '%s'", room),
+		Room:     room,
+	}
+	rawMessage, err := json.Marshal(welcomMessage)
+	if err != nil {
+		log.Printf("[WARN] failed unmarshaling %v", err)
+	}
+	sub.conn.send <- rawMessage
+
 }

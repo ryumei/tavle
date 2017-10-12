@@ -48,7 +48,6 @@ new Vue({
             // Initialize WebSocket connection
             var self = this;
             this.ws = new WebSocket('ws://' + window.location.host + '/ws/' + this.room);
-            //this.ws = new WebSocket('ws://' + window.location.host + '/ws');
             this.ws.addEventListener('message', function(e) {
                 console.log('[DEBUG] Receive data from the server');
                 console.log(e.data);
@@ -64,7 +63,7 @@ new Vue({
             });
         },
         gravatarURL: function(email) {
-            return 'http://www.gravatar.com/avatar/' + CryptoJS.MD5(email);
+            return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
         }
     }
 });

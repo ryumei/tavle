@@ -95,8 +95,6 @@ func connectionStateChange(c net.Conn, st http.ConnState) {
 }
 
 func main() {
-	log.Printf("[DEBUG] HELLO")
-
 	// Channel to catch signals
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
