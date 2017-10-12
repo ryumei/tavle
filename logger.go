@@ -63,8 +63,13 @@ func LogRequest(r *http.Request) {
 }
 
 func openLogFile(logPath string) *os.File {
+	if logPath == "" {
+		log.Printf("[WARN] [Server] ServerLog is undefined. Log to STDERR.")
+		return os.Stderr
+	}
 	logWriter, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
+		log.Printf("[WARN] %v Log to STDERR.", err)
 		return os.Stderr
 	}
 	return logWriter
@@ -72,18 +77,23 @@ func openLogFile(logPath string) *os.File {
 
 // LogConfig is configuration for logging
 type LogConfig struct {
-	accessLog string
-	serverLog string
+	AccessLog string
+	ServerLog string
 	Level     string
 }
 
 func ConfigLogging(conf LogConfig) {
-	logWriter := openLogFile(conf.serverLog)
+	logWriter := openLogFile(conf.ServerLog)
+
+	logLevel := conf.Level
+	if logLevel == "" {
+		logLevel = "INFO"
+	}
 
 	// Logging with logutils
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
-		MinLevel: logutils.LogLevel(conf.Level),
+		MinLevel: logutils.LogLevel(logLevel),
 		Writer:   logWriter,
 	}
 	log.SetOutput(filter)

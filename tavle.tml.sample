@@ -2,13 +2,14 @@
 #
 # This config should be noted in TOML.
 # See also https://github.com/toml-lang/toml
+# Case sensitive.
 
 [Server]
-port    = 8000
-endpoint = "localhost"
-debug = true
+Port     = 8000
+Endpoint = "localhost"
+Debug    = true
 
 [Log]
-accessLog = "access.log"
-serverLog = "server.log"
-level = "DEBUG"
+AccessLog = "access.log"
+ServerLog = "server.log"
+Level     = "INFO"

@@ -31,8 +31,8 @@ var (
 
 // config is master configuration
 type config struct {
-	server serverConfig
-	log    LogConfig
+	Server serverConfig
+	Log    LogConfig
 }
 
 // serverConfig is configuration for websocket server
@@ -74,9 +74,10 @@ func init() {
 
 	if _, err := toml.DecodeFile(confPath, &conf); err != nil {
 		log.Println(err)
-		log.Fatalln("Failed to load config file.", confPath)
+		log.Fatalf("Failed to load config file '%s'. ", confPath)
 	}
-	ConfigLogging(conf.log)
+
+	ConfigLogging(conf.Log)
 }
 
 var activeConnWaiting sync.WaitGroup
@@ -94,11 +95,13 @@ func connectionStateChange(c net.Conn, st http.ConnState) {
 }
 
 func main() {
+	log.Printf("[DEBUG] HELLO")
+
 	// Channel to catch signals
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	binding := fmt.Sprintf("%v:%d", conf.server.Endpoint, conf.server.Port)
+	binding := fmt.Sprintf("%v:%d", conf.Server.Endpoint, conf.Server.Port)
 	log.Printf("[INFO] %s bound on %v", distName, binding)
 
 	laddr, _ := net.ResolveTCPAddr("tcp", binding)
@@ -120,7 +123,7 @@ func main() {
 	}()
 
 	// handler on http endpoint
-	router := registHandlers(conf.log.accessLog)
+	router := registHandlers(conf.Log.AccessLog)
 	server := &http.Server{Handler: router, ConnState: connectionStateChange}
 	server.Serve(listener)
 	activeConnWaiting.Wait()
