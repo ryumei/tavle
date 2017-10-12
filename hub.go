@@ -1,7 +1,10 @@
 package main
 
-import "log"
-import "encoding/json"
+import (
+	"encoding/json"
+	"log"
+	"strings"
+)
 
 // Message is a message object
 type Message struct {
@@ -70,14 +73,27 @@ func (h *Hub) run() {
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections))
 
+			rawMessage, err := json.Marshal(msg)
+			if err != nil {
+				log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
+			}
+			var rawAdminMessage []byte
+			if strings.Index(msg.Message, "admin") == 0 {
+				rawAdminMessage, _ = json.Marshal(Message{
+					Email:    "email",
+					Username: "Tavle Admin",
+					Message:  GetQuote(),
+					Room:     "foyer",
+				})
+			}
+
 			for c := range connections {
-				rawMessage, err := json.Marshal(msg)
-				if err != nil {
-					log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
-				}
 				select {
 				case c.send <- rawMessage:
 					log.Printf("[DEBUG] hub send [%s]: %s", msg.Room, msg.Message)
+					if len(rawAdminMessage) > 0 {
+						c.send <- rawAdminMessage
+					}
 				default:
 					log.Printf("[DEBUG] hub default close connection")
 					close(c.send)

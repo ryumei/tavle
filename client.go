@@ -160,5 +160,4 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Printf("[WARN] failed unmarshaling %v", err)
 	}
 	sub.conn.send <- rawMessage
-
 }
