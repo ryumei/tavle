@@ -28,10 +28,6 @@ new Vue({
             }
         },
         join: function () {
-            if (!this.email) {
-                Materialize.toast('You must enter an email', 2000);
-                return
-            }
             if (!this.username) {
                 Materialize.toast('You must choose a username', 2000);
                 return
@@ -49,12 +45,15 @@ new Vue({
             var self = this;
             this.ws = new WebSocket('ws://' + window.location.host + '/ws/' + this.room);
             this.ws.addEventListener('message', function(e) {
-                console.log('[DEBUG] Receive data from the server');
-                console.log(e.data);
+                console.log('[DEBUG] Receive data from the server: ' + e.data);
                 var msg = JSON.parse(e.data);
+
+                avatarImg = (msg.email != "")
+                    ? '<img src="' + self.gravatarURL(msg.email) + '">'
+                    : '<img src="data:image/svg+xml;base64,' + self.identicon(msg.username) + '">';
+                    
                 self.chatContent += '<div class="chip">'
-                        + '<img src="' + self.gravatarURL(msg.email) + '">' // Avatar
-                        + msg.username
+                    + avatarImg + msg.username
                     + '</div>'
                     + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
     
@@ -64,6 +63,14 @@ new Vue({
         },
         gravatarURL: function(email) {
             return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
+        },
+        identicon: function(source) {
+            secret = "secret";
+            hash = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA1(source, secret));
+            console.log(hash)
+            data = new Identicon(hash, {format: 'svg'}).toString();
+            console.log(data.length);
+            return data;
         }
     }
 });

@@ -134,7 +134,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	} else {
 	}
 	if err != nil {
-		log.Println(err)
+		log.Printf("[ERROR] %v", err)
 		return
 	}
 	log.Printf("[DEBUG] The connection is upgraded")
