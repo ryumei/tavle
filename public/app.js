@@ -8,10 +8,11 @@ new Vue({
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
         room: null, // Unique room name
-        joined: false // True if email and username have been filled in
+        joined: false, // True if email and username have been filled in
+        uuid: uuidv1()
     },
     created: function() {
-        console.log("[DEBUG] created");
+        console.log("[DEBUG] created " + this.uuid);
     },
     methods: {
         send: function () {
@@ -65,12 +66,9 @@ new Vue({
             return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
         },
         identicon: function(source) {
-            secret = "secret";
+            secret = this.uuid;
             hash = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA1(source, secret));
-            console.log(hash)
-            data = new Identicon(hash, {format: 'svg'}).toString();
-            console.log(data.length);
-            return data;
+            return new Identicon(hash, {format: 'svg'}).toString();
         }
     }
 });
