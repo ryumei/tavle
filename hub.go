@@ -78,9 +78,9 @@ func (h *Hub) run() {
 				log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
 			}
 			var rawAdminMessage []byte
-			if strings.Index(msg.Message, "admin") == 0 {
+			if strings.HasPrefix(msg.Message, "admin ") {
 				rawAdminMessage, _ = json.Marshal(Message{
-					Email:    "email",
+					Email:    "",
 					Username: "Tavle Admin",
 					Message:  GetQuote(),
 					Room:     "foyer",
