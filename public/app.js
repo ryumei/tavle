@@ -1,4 +1,5 @@
 new Vue({
+
     el: '#app',
 
     data: {
@@ -8,11 +9,13 @@ new Vue({
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
         room: null, // Unique room name
-        joined: false, // True if email and username have been filled in
-        uuid: uuidv1()
+        joined: false // True if email and username have been filled in
+    },
+    components: {
+        'avatar': Avatar.Avatar
     },
     created: function() {
-        console.log("[DEBUG] created " + this.uuid);
+        console.log("[DEBUG] created ");
     },
     methods: {
         send: function () {
@@ -51,8 +54,8 @@ new Vue({
 
                 avatarImg = (msg.email != "")
                     ? '<img src="' + self.gravatarURL(msg.email) + '">'
-                    : '<img src="data:image/svg+xml;base64,' + self.identicon(msg.username) + '">';
-                    
+                    : '<avatar username="Jane Doe"></avatar>';
+
                 self.chatContent += '<div class="chip">'
                     + avatarImg + msg.username
                     + '</div>'
@@ -64,11 +67,6 @@ new Vue({
         },
         gravatarURL: function(email) {
             return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
-        },
-        identicon: function(source) {
-            secret = this.uuid;
-            hash = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA1(source, secret));
-            return new Identicon(hash, {format: 'svg'}).toString();
         }
     }
 });
