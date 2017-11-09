@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // Message is a message object
@@ -45,6 +47,26 @@ var hub = Hub{
 	register:   make(chan subscription),
 	unregister: make(chan subscription),
 	rooms:      make(map[string]map[*connection]bool),
+}
+
+func dectate(rawMsg []byte) {
+	//TODO add datetime stamp
+	var msg Message
+	json.Unmarshal(rawMsg, &msg)
+	fname := msg.Room + time.Now().Format("2017-11-09")
+	log.Printf(fname)
+	f, err := os.OpenFile(fname, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Printf("[ERROR] failed to write file %v", err)
+		return
+	}
+	defer f.Close()
+
+	_, err = f.Write(rawMsg)
+	if err != nil {
+		log.Printf("[ERROR] failed to write file %v", err)
+		return
+	}
 }
 
 func (h *Hub) run() {
@@ -94,6 +116,8 @@ func (h *Hub) run() {
 					Room:     DefaultRoomname,
 				})
 			}
+			//TODO log message
+			dectate(rawMessage)
 
 			for c := range connections {
 				select {
