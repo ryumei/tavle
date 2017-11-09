@@ -36,6 +36,9 @@ type Hub struct {
 	unregister chan subscription
 }
 
+// DefaultRoomname 省略時のルーム名
+var DefaultRoomname = "foyer"
+
 // hub is the global hub
 var hub = Hub{
 	broadcast:  make(chan Message),
@@ -85,7 +88,7 @@ func (h *Hub) run() {
 					Email:    "",
 					Username: "Tavle Admin",
 					Message:  GetQuote(),
-					Room:     "foyer",
+					Room:     DefaultRoomname,
 				})
 			}
 
