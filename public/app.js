@@ -1,5 +1,8 @@
-new Vue({
+Vue.config.devtools = true
+//var Avatar = require('vue-avatar')
+//import Avatar from 'Avatar/Avatar'
 
+new Vue({
     el: '#app',
 
     data: {
@@ -12,6 +15,7 @@ new Vue({
         joined: false // True if email and username have been filled in
     },
     components: {
+        //Avatar
         'avatar': Avatar.Avatar
     },
     created: function() {

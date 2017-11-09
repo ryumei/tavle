@@ -102,8 +102,15 @@ func main() {
 	binding := fmt.Sprintf("%v:%d", conf.Server.Endpoint, conf.Server.Port)
 	log.Printf("[INFO] %s bound on %v", distName, binding)
 
-	laddr, _ := net.ResolveTCPAddr("tcp", binding)
-	listener, _ := net.ListenTCP("tcp", laddr)
+	laddr, err := net.ResolveTCPAddr("tcp", binding)
+	if err != nil {
+		log.Printf("[WARN] %v", err)
+	}
+	listener, err := net.ListenTCP("tcp", laddr)
+	if err != nil {
+		log.Printf("[WARN] %v", err)
+	}
+	defer listener.Close()
 
 	exitCh := make(chan int)
 	go func() {
