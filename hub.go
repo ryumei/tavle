@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"regexp"
 	"strings"
 )
 
@@ -48,6 +49,7 @@ func (h *Hub) run() {
 	for {
 		select {
 		case sub := <-h.register:
+			// TODO validate or sanitize room name
 			log.Printf("[DEBUG] hub register room '%s'", sub.room)
 			connections := h.rooms[sub.room]
 			if connections == nil {
@@ -105,4 +107,11 @@ func (h *Hub) run() {
 			}
 		}
 	}
+}
+
+var r = regexp.MustCompile(`^[\w\-\.]+$`)
+
+func validateRoomname(roomname string) bool {
+	log.Printf("[DEBUG] %s", roomname)
+	return r.Match([]byte(roomname))
 }
