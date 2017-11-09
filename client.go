@@ -127,12 +127,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	// var 'room' is expect in the URL path of WebSocket '/ws/{room}'
 	vars := mux.Vars(r)
-	room := vars["room"]
-	if room == "" {
-		room = "foyer"
-		log.Printf("[WARN] Use default roomname '%s' instead of empty.", vars["room"])
-	} else {
-	}
+	room := sanitizeRoomname(vars["room"])
 	if err != nil {
 		log.Printf("[ERROR] %v", err)
 		return
