@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -51,27 +49,6 @@ var hub = Hub{
 	rooms:      make(map[string]map[*connection]bool),
 }
 
-func dectate(rawMsg []byte) {
-	//TODO add datetime stamp
-	var msg Message
-	json.Unmarshal(rawMsg, &msg)
-	msg.Timestamp = time.Now() //---------------
-	fname := fmt.Sprintf("%s-%s.csv", msg.Room, time.Now().Format("20060102"))
-	log.Printf(fname)
-	f, err := os.OpenFile(fname, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		log.Printf("[ERROR] failed to write file %v", err)
-		return
-	}
-	defer f.Close()
-
-	_, err = f.Write(rawMsg)
-	if err != nil {
-		log.Printf("[ERROR] failed to write file %v", err)
-		return
-	}
-}
-
 func (h *Hub) run() {
 	log.Printf("[DEBUG] hub run enter")
 	for {
@@ -102,6 +79,7 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
+			msg.Timestamp = time.Now()
 			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // called from readPump
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections))
@@ -110,19 +88,20 @@ func (h *Hub) run() {
 			if err != nil {
 				log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
 			}
+			writer <- msg
+
 			var rawAdminMessage []byte
 			if strings.HasPrefix(msg.Message, "admin ") {
-				rawAdminMessage, _ = json.Marshal(Message{
+				admMsg := Message{
 					Email:     "",
 					Username:  "Tavle Admin",
 					Message:   GetQuote(),
 					Room:      DefaultRoomname,
 					Timestamp: time.Now(),
-				})
+				}
+				rawAdminMessage, _ = json.Marshal(admMsg)
+				writer <- admMsg
 			}
-			//TODO log message
-			dectate(rawMessage)
-			// dectate adminMessage
 
 			for c := range connections {
 				select {
