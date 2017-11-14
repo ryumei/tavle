@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -11,10 +12,11 @@ import (
 
 // Message is a message object
 type Message struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Message  string `json:"message"`
-	Room     string `json:"room"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Message   string    `json:"message"`
+	Room      string    `json:"room"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // subscription is connection and joined room
@@ -53,7 +55,8 @@ func dectate(rawMsg []byte) {
 	//TODO add datetime stamp
 	var msg Message
 	json.Unmarshal(rawMsg, &msg)
-	fname := msg.Room + time.Now().Format("2017-11-09")
+	msg.Timestamp = time.Now() //---------------
+	fname := fmt.Sprintf("%s-%s.csv", msg.Room, time.Now().Format("20060102"))
 	log.Printf(fname)
 	f, err := os.OpenFile(fname, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
@@ -110,14 +113,16 @@ func (h *Hub) run() {
 			var rawAdminMessage []byte
 			if strings.HasPrefix(msg.Message, "admin ") {
 				rawAdminMessage, _ = json.Marshal(Message{
-					Email:    "",
-					Username: "Tavle Admin",
-					Message:  GetQuote(),
-					Room:     DefaultRoomname,
+					Email:     "",
+					Username:  "Tavle Admin",
+					Message:   GetQuote(),
+					Room:      DefaultRoomname,
+					Timestamp: time.Now(),
 				})
 			}
 			//TODO log message
 			dectate(rawMessage)
+			// dectate adminMessage
 
 			for c := range connections {
 				select {
