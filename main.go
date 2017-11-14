@@ -17,7 +17,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gorilla/websocket"
 )
 
 /*
@@ -43,8 +42,9 @@ type serverConfig struct {
 }
 
 // Global variables are usually a bad practice but we will use them this time for simplicity.
-var clients = make(map[*websocket.Conn]bool) // connected clients
-var broadcast = make(chan Message)           // broadcast channel
+//var clients = make(map[*websocket.Conn]bool) // connected clients
+//var broadcast = make(chan Message) // broadcast channel
+var writer = make(chan Message) // exporter channels
 
 // registHandlers maps URL paths to handler functions
 func registHandlers(logPath string) http.Handler {
@@ -124,6 +124,21 @@ func main() {
 			listener.Close()
 			log.Printf("[INFO] %v have went down. Bye.", distName)
 			exitCh <- 0
+		}
+	}()
+
+	// 標準出力用ゴルーチン起動
+	go func() {
+	loop:
+		for {
+			select {
+			case msg, ok := <-writer:
+				if !ok { // selectでchanのクローズを検知する方法
+					fmt.Println("writer channel is closed")
+					break loop
+				}
+				dectateCSV(msg)
+			}
 		}
 	}()
 

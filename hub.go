@@ -5,14 +5,16 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // Message is a message object
 type Message struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Message  string `json:"message"`
-	Room     string `json:"room"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Message   string    `json:"message"`
+	Room      string    `json:"room"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // subscription is connection and joined room
@@ -77,6 +79,7 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
+			msg.Timestamp = time.Now()
 			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // called from readPump
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections))
@@ -85,14 +88,19 @@ func (h *Hub) run() {
 			if err != nil {
 				log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
 			}
+			writer <- msg
+
 			var rawAdminMessage []byte
 			if strings.HasPrefix(msg.Message, "admin ") {
-				rawAdminMessage, _ = json.Marshal(Message{
-					Email:    "",
-					Username: "Tavle Admin",
-					Message:  GetQuote(),
-					Room:     DefaultRoomname,
-				})
+				admMsg := Message{
+					Email:     "",
+					Username:  "Tavle Admin",
+					Message:   GetQuote(),
+					Room:      DefaultRoomname,
+					Timestamp: time.Now(),
+				}
+				rawAdminMessage, _ = json.Marshal(admMsg)
+				writer <- admMsg
 			}
 
 			for c := range connections {
