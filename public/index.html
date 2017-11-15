@@ -30,7 +30,7 @@
         </div>
         <div class="row" v-if="joined">
             <div class="input-field col s8">
-                <input type="text" v-model="newMsg" @keyup.enter="send">
+                <input type="text" v-model="newMsg" @keyup.down="send">
             </div>
             <div class="input-field col s4">
                 <button class="waves-effect waves-light btn" @click="send">
