@@ -1,6 +1,30 @@
 Vue.config.devtools = true
 //var Avatar = require('vue-avatar')
 //import Avatar from 'Avatar/Avatar'
+Vue.use(VueSessionStorage)
+
+// Initialize WebSocket connection
+var connectWs = function(vueBase) {
+    var self = vueBase;
+    vueBase.ws = new WebSocket('ws://' + window.location.host + '/ws/' + vueBase.room);
+    vueBase.ws.addEventListener('message', function(e) {
+        console.log('[DEBUG] Receive data from the server: ' + e.data);
+        var msg = JSON.parse(e.data);
+
+        avatarImg = (msg.email != "")
+            ? '<img src="' + self.gravatarURL(msg.email) + '">'
+            : '<avatar username="Jane Doe"></avatar>';
+
+        self.chatContent += '<div class="chip">'
+            + avatarImg + msg.username
+            + '</div>'
+            + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
+
+        var element = document.getElementById('chat-messages');
+        element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
+    });
+}            
+
 
 new Vue({
     el: '#app',
@@ -12,14 +36,32 @@ new Vue({
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
         room: null, // Unique room name
-        joined: false // True if email and username have been filled in
+        joined: false // True if email or username have been filled in
     },
     components: {
         //Avatar
         'avatar': Avatar.Avatar
     },
     created: function() {
-        console.log("[DEBUG] created ");
+        if (this.$session.get("created")) {
+            console.log("[DEBUG] created0");
+            try {
+                stub = JSON.parse(this.$session.get("stub"));
+                this.email = stub['email'];
+                this.username = stub['username'];
+                this.room = stub['room'];
+                this.joined = true;
+                connectWs(this);
+
+                console.log("[DEBUG] Reconnected " + this.username + "@" + this.room);
+            }
+            catch(e) {
+                console.log("[ERROR] " + e);
+            }
+        } else {
+            console.log("[DEBUG] not created. Initializing");
+            this.$session.set("created", true);            
+        }
     },
     methods: {
         send: function () {
@@ -48,26 +90,16 @@ new Vue({
             this.username = $('<p>').html(this.username).text();
             this.room = $('<p>').html(this.room).text();
             this.joined = true;
+            
+            this.$session.set("stub", JSON.stringify({
+                username: this.username,
+                email: this.email,
+                room: this.room
+            }));         
+            this.$session.set("joined", true);
 
             // Initialize WebSocket connection
-            var self = this;
-            this.ws = new WebSocket('ws://' + window.location.host + '/ws/' + this.room);
-            this.ws.addEventListener('message', function(e) {
-                console.log('[DEBUG] Receive data from the server: ' + e.data);
-                var msg = JSON.parse(e.data);
-
-                avatarImg = (msg.email != "")
-                    ? '<img src="' + self.gravatarURL(msg.email) + '">'
-                    : '<avatar username="Jane Doe"></avatar>';
-
-                self.chatContent += '<div class="chip">'
-                    + avatarImg + msg.username
-                    + '</div>'
-                    + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
-    
-                var element = document.getElementById('chat-messages');
-                element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
-            });
+            connectWs(this);
         },
         gravatarURL: function(email) {
             return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
