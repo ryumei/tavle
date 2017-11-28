@@ -83,6 +83,9 @@ type LogConfig struct {
 }
 
 func ConfigLogging(conf LogConfig) {
+	prepareLogDir(conf.ServerLog)
+	prepareLogDir(conf.AccessLog)
+
 	logWriter := openLogFile(conf.ServerLog)
 
 	logLevel := conf.Level
