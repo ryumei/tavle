@@ -6,7 +6,7 @@ install:
 - make deps
 - cp tavle.tml.sample tavle.tml
 script:
-- make test
+- make dist
 deploy:
   provider: releases
   skip_cleanup: true
