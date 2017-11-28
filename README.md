@@ -2,6 +2,10 @@ A talk board
 
 *tavle* is a blackboard in Norwegian.
 
+# 使い方
+
+設定ファイルを配置し、実行します。
+
 ## 初期設定
 
 tavle.tml.sample を tavle.tml という名前にコピーし、
@@ -12,6 +16,9 @@ tavle.tml.sample を tavle.tml という名前にコピーし、
 Port   = 8888
 Endpoint = ""
 Debug = false
+EnableTLS = false
+CertFile = ""
+KeyFile = ""
 
 [Log]
 AccessLog = "access.log"
@@ -23,6 +30,7 @@ Level = "INFO"
 
     $ ./tavle -c tavle.tml
 
+Windows の場合は、 実行ファイルは tavle.exe という名称です。
 tavle.tml が同じディレクトリにある場合には、``-c`` オプションは省略可能です。
 
 ## 接続の仕方

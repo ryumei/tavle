@@ -10,19 +10,19 @@ Endpoint = "localhost"
 Port    = 8000
 #  Debug デバッグモード
 Debug = true
-#  EnableTLS 暗号化通信を有効に (KeyFile と CertFile も必要)
+#  EnableTLS 暗号化通信を有効にするかどうか (KeyFile と CertFile も必要)
 #  KeyFile サーバ鍵
-#  CertFile
+#  CertFile サーバ証明書
 EnableTLS = false
-KeyFile = ""
 CertFile = ""
+KeyFile = ""
 # DataDir チャット履歴の保管ディレクトリ
 DataDir = "chatlog"
 
 [Log]
-# Accesslog
-# Serverlog
-# Level ログレベル
+# AccessLog クライアントからのアクセスログ
+# ServerLog サーバの動作ログ
 AccessLog = "log/access.log"
 ServerLog = "log/server.log"
-Level = "DEBUG"
+# Level ログレベル
+Level = "INFO"

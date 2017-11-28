@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"time"
 )
 
 // CSV ファイルへチャットログを書き出す
-func dectateCSV(msg Message) {
+func dectateCSV(msg Message, parent string) {
 	// NOTE サーバ側の timezone がそれぞれで異なると、
 	// 同時刻でも別の日付ログファイルに入る可能性あり。
 	// マージ後に考えれば良いか。
 	// キャッシュ層を入れれば、そこで吸収できるはず。
-	fname := fmt.Sprintf("%s-%s.csv", msg.Room, time.Now().Format("20060102"))
-	f, err := os.OpenFile(fname, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	fpath := path.Join(parent,
+		fmt.Sprintf("%s-%s.csv", msg.Room, time.Now().Format("20060102")))
+
+	f, err := os.OpenFile(fpath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Printf("[ERROR] failed to write file %v", err)
 		return

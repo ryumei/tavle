@@ -42,6 +42,7 @@ type serverConfig struct {
 	EnableTLS bool
 	KeyFile   string
 	CertFile  string
+	DataDir   string
 }
 
 // Global variables are usually a bad practice but we will use them this time for simplicity.
@@ -130,6 +131,13 @@ func main() {
 		}
 	}()
 
+	// 保管用ディレクトリの準備
+	dataDirPath := conf.Server.DataDir
+	if err := os.Mkdir(dataDirPath, os.ModePerm); err != nil {
+		log.Printf("[WARN] %v", err)
+		dataDirPath = "."
+	}
+
 	// 標準出力用ゴルーチン起動
 	go func() {
 	loop:
@@ -140,7 +148,7 @@ func main() {
 					fmt.Println("writer channel is closed")
 					break loop
 				}
-				dectateCSV(msg)
+				dectateCSV(msg, dataDirPath)
 			}
 		}
 	}()
