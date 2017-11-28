@@ -145,7 +145,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go sub.readPump()
 
 	welcomMessage := Message{
-		Email:    "",
+		Email:    "admin@tavle.example.com",
 		Username: "Tavle Admin",
 		Message:  fmt.Sprintf("Welcome to room '%s'", room),
 		Room:     room,

@@ -1,9 +1,13 @@
 *.tml
+*.pem
 glide.lock
 
 bin/
 vendor/
 dist/
+log/
+chatlog/
+node_modules/
 
 # Binaries for programs and plugins
 *.exe
