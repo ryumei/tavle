@@ -38,3 +38,22 @@ tavle.tml が同じディレクトリにある場合には、``-c`` オプショ
   * OS
   * ネットワーク経路
 
+# SSL/TLS 証明書
+
+OpenSSL で作る例。
+
+## 認証局役
+
+```
+openssl genrsa -out ca-privatekey.pem 2048
+openssl req -new -key ca-privatekey.pem -out ca-csr.pem
+openssl req -x509 -key ca-privatekey.pem -in ca-csr.pem -out ca-crt.pem -days 3650
+```
+
+## サーバ役
+
+```
+openssl genrsa -out server-privatekey.pem
+openssl req -new -key server-privatekey.pem -out server-csr.pem
+openssl x509 -req -CA ca-crt.pem -CAkey ca-privatekey.pem -CAcreateserial -in server-csr.pem -out server-crt.pem -days 3650
+```
