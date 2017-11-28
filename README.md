@@ -34,7 +34,7 @@ tavle.tml が同じディレクトリにある場合には、``-c`` オプショ
 
 ### クライアントからの接続
 
-起動の後、ブラウザで http://SERVER_IP:8888/ にアクセスしてみてください。
+起動の後、ブラウザで http://localhost:8000/ にアクセスしてみてください。
 ポート番号は、設定ファイルにて指定したものに読み替えてください。
 
 ログイン画面が開きますので、入力してください。
@@ -60,8 +60,10 @@ tavle.tml が同じディレクトリにある場合には、``-c`` オプショ
 
 ### SSL/TLS 証明書
 
-設定ファイルの EnableTLS を true
-OpenSSL で作るサンプルを contrib/create_certs.sh に。
+設定ファイルの ``[Server]`` の ``EnableTLS`` を ``true`` にし、
+``CertFile`` と ``KeyFile`` にサーバ証明書、鍵ファイルのパスを指定してください。
+
+OpenSSL で作るサンプルを、ソース版の contrib/create_certs.sh に置いてあります。
 
 ## インストール方法 Install
 
@@ -102,3 +104,5 @@ $ make dist
 [Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## Author
+
+Takaaki NAKAJIMA

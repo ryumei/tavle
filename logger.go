@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/logutils"
 )
 
+// LineOfLog is is data type for request logging
 type LineOfLog struct {
 	RemoteAddr  string
 	ContentType string
@@ -19,6 +20,7 @@ type LineOfLog struct {
 	Body        string
 }
 
+// TemplateOfLog is template for request logging
 var TemplateOfLog = `[INFO]
 Remote address:   {{.RemoteAddr}}
 Content-Type:     {{.ContentType}}
@@ -82,6 +84,7 @@ type LogConfig struct {
 	Level     string
 }
 
+// ConfigLogging set up configuration for logging
 func ConfigLogging(conf LogConfig) {
 	prepareLogDir(conf.ServerLog)
 	prepareLogDir(conf.AccessLog)

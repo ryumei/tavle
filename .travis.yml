@@ -13,7 +13,7 @@ deploy:
   api_key:
     secure: lHiJjl+kahgYtKi6U284NttSIaVP1uhiTuGjr9msNyzf4mxUDKh12NPvQTyrQG8Qkt8X6wl9KWnIiI1lKheuniY1SWGWi8r5alanikwAgYxztbIL7AfKqjhc7QiKvKhfPskN1Q6hnzpTr+HNe5Yz7g6WAv82HGKFQ8NSxcnBqzzTtR+qf3qwlI7/jpKaxsbFZuzpIU9WUjzUlrE9XngCDpH2DD8K3+IZhpP1rzzDlFpuFsDyCklu0VSrJkSDvELS83OV6XDHL1G4tHRuBz+kPBbgnD5otzDawHPUkKuoFWsq7YdH1Xui7fV/v9DLXyt1dKB7vcr4nGyG93JqGsQz0UOm8x/MbF1qNux01Vp/OlNxb9rPWVQ02xRgOm1uuOsmW8Of32Wtf2shENWgCBNtPyS61Ll1V6D5KiyW9A7boUmZOeCR95oN5NfWqMirdYIyyIdAyt5IIIWDTFu+7hUD41XHaPbTWqyLX2zqnTKydXJMgxNtPWKpTcW8N8lX1M9W8vG4bO/3G7DhqQOl/0JiHw8fHD8aQ1PRl35IbAfpITzqsC+Fwn2g7EBZNy5/+C+tAv+24lUc0MXnUhgWBYfsUbYep9z+0D4HMWLRV0EWaH9eeXAWV6V0quCtmdv2U38Q8WGyy2rFPXHSCt/LrRTVlt2xrlMrzbfRo+4uQZdC1NM=
   file_glob: true
-  file: 'dist/tavle-*.{tar.gz,zip}'
+  file: 'dist/tavle-*.{zip}'
   on:
     repo: ryumei/tavle
     tags: true
