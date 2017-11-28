@@ -1,19 +1,20 @@
 Vue.config.devtools = true
-//var Avatar = require('vue-avatar')
-//import Avatar from 'Avatar/Avatar'
 Vue.use(VueSessionStorage)
 
 // Initialize WebSocket connection
 var connectWs = function(vueBase) {
     var self = vueBase;
-    vueBase.ws = new WebSocket('ws://' + window.location.host + '/ws/' + vueBase.room);
+
+    protocol = (this.location.protocol == 'https:') ? 'wss:' : 'ws:'; 
+    vueBase.ws = new WebSocket(protocol + '//' + window.location.host + '/ws/' + vueBase.room);
+    
     vueBase.ws.addEventListener('message', function(e) {
         console.log('[DEBUG] Receive data from the server: ' + e.data);
         var msg = JSON.parse(e.data);
 
         avatarImg = (msg.email != "")
             ? '<img src="' + self.gravatarURL(msg.email) + '">'
-            : '<avatar username="Jane Doe"></avatar>';
+            : '';
 
         self.chatContent += '<div class="chip">'
             + avatarImg + msg.username
@@ -24,7 +25,6 @@ var connectWs = function(vueBase) {
         element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
     });
 }            
-
 
 new Vue({
     el: '#app',
@@ -39,12 +39,9 @@ new Vue({
         joined: false // True if email or username have been filled in
     },
     components: {
-        //Avatar
-        'avatar': Avatar.Avatar
     },
     created: function() {
         if (this.$session.get("created")) {
-            console.log("[DEBUG] created0");
             try {
                 stub = JSON.parse(this.$session.get("stub"));
                 this.email = stub['email'];
@@ -52,7 +49,7 @@ new Vue({
                 this.room = stub['room'];
                 this.joined = true;
                 connectWs(this);
-
+                
                 console.log("[DEBUG] Reconnected " + this.username + "@" + this.room);
             }
             catch(e) {

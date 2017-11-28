@@ -36,9 +36,12 @@ type config struct {
 
 // serverConfig is configuration for websocket server
 type serverConfig struct {
-	Port     uint
-	Endpoint string
-	Debug    bool
+	Port      uint
+	Endpoint  string
+	Debug     bool
+	EnableTLS bool
+	KeyFile   string
+	CertFile  string
 }
 
 // Global variables are usually a bad practice but we will use them this time for simplicity.
@@ -145,7 +148,17 @@ func main() {
 	// handler on http endpoint
 	router := registHandlers(conf.Log.AccessLog)
 	server := &http.Server{Handler: router, ConnState: connectionStateChange}
-	server.Serve(listener)
+
+	//TODO
+	if conf.Server.EnableTLS {
+		log.Println("[INFO] TLS enabled..")
+		err := server.ServeTLS(listener, "cert.pem", "key.pem")
+		log.Fatal(err)
+	} else {
+		log.Println("[INFO] TLS disabled.")
+		err := server.Serve(listener)
+		log.Fatal(err)
+	}
 	activeConnWaiting.Wait()
 
 	code := <-exitCh
