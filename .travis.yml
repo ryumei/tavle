@@ -4,5 +4,6 @@ go:
 install:
   - go get -u github.com/golang/lint/golint
   - make deps
+  - cp tavle.tml.sample tavle.tml
 script:
   - make test
