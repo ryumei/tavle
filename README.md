@@ -1,6 +1,8 @@
 Tavle
 =======================================
 
+![](https://travis-ci.org/ryumei/tavle.svg)
+
 A tiny chat server for classroom.
 
 ## 概要 Description
