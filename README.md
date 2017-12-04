@@ -11,6 +11,7 @@ It is an example implementation of online chat system using WebSocket.
 *tavle* is a blackboard in Norwegian.
 
 Websocket を使ったチャットの実装例です。
+このツールは、コミュニティ [eLV](http://www.elv.tokyo/) の活動の一環で生まれました。
 
 ## 必要なもの Requirement
 
