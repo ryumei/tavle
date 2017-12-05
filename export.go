@@ -10,7 +10,7 @@ import (
 )
 
 // CSV ファイルへチャットログを書き出す
-func dectateCSV(msg Message, parent string) {
+func dectateCSV(msg Message, parent string) error {
 	// NOTE サーバ側の timezone がそれぞれで異なると、
 	// 同時刻でも別の日付ログファイルに入る可能性あり。
 	// マージ後に考えれば良いか。
@@ -21,7 +21,7 @@ func dectateCSV(msg Message, parent string) {
 	f, err := os.OpenFile(fpath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Printf("[ERROR] failed to write file %v", err)
-		return
+		return err
 	}
 	defer f.Close()
 	writer := csv.NewWriter(f)
@@ -36,7 +36,8 @@ func dectateCSV(msg Message, parent string) {
 
 	if err := writer.Write(row); err != nil {
 		log.Printf("[ERROR] failed to write file %v", err)
-		return
+		return err
 	}
 	writer.Flush()
+	return nil
 }

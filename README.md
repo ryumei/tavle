@@ -1,6 +1,8 @@
 Tavle
 =======================================
 
+[![Build Status](https://travis-ci.org/ryumei/tavle.svg?branch=master)](https://travis-ci.org/ryumei/tavle)
+
 A tiny chat server for classroom.
 
 ## 概要 Description
@@ -9,6 +11,7 @@ It is an example implementation of online chat system using WebSocket.
 *tavle* is a blackboard in Norwegian.
 
 Websocket を使ったチャットの実装例です。
+このツールは、コミュニティ [eLV](http://www.elv.tokyo/) の活動の一環で生まれました。
 
 ## 必要なもの Requirement
 
