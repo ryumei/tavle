@@ -1,7 +1,10 @@
-Tavle: How to run
+Tavle: How to Use
 =======================================
 
-実行するサーバ役ホストの IP アドレスを調べておいてください。
+サーバの実行は、Windows、Mac、Linux 上で行えます。
+クライアントはウェブブラウザ (Chrome、Safari、Firefoxなど) で接続します。
+
+事前に実行するサーバ役ホストの IP アドレスを調べておいてください。
 
 # 1. バイナリパッケージの取得
 
@@ -11,13 +14,23 @@ Tavle: How to run
 # 2. 初期設定
 
 ``tavle.tml.sample`` を ``tavle.tml`` という名前にコピーし、
-[Server] の Endpoint と Port を適切に修正してください (設定項目は大文字小文字を区別します)。
+[Server] の Endpoint (IP アドレス) と Port (ポート番号) を
+適切に修正してください (設定項目は大文字小文字を区別します)。
+
+```tml
+[Server]
+Endpoint = ""
+Port     = 8000
+```
+
+Endpoint を空文字にすることで、
+実際の IP アドレスに関わらず、接続を受け付けるようになります。
 
 # 3. サーバの起動
 
     $ ./tavle -c tavle.tml
 
-Windows の場合は、 実行ファイルは tavle.exe という名称です。
+Windows の場合は、 実行ファイルは ``tavle.exe`` という名称です。
 tavle.tml が同じディレクトリにある場合には、``-c`` オプションは省略可能です。
 
 # 4. クライアントからの接続
