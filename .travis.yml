@@ -17,7 +17,7 @@ deploy:
   on:
     repo: ryumei/tavle
     tags: true
-    condition: "x$TRAVIS_EVENT_TYPE" != "xcron"
+    condition: x$TRAVIS_EVENT_TYPE != xcron
 notifications:
   slack:
     secure: TpJtQjft0K64i1SLscypb5N6PJG+EupuIq+gDj4LGZoq5lsV3xs8AZpPWNpHGWb6+yhDT96zxAe2go7ZzMZvUIgAWiMrsKJikz5xEuHfUbvh5cqgbzFga1U432KUjEA+W2elzU0zP2kVUb8LPXyzPl0b8WCn8R4dZHeQ6Nkxksy3nsUm1IAKA5ET+zmtgFs9O0RWmgOowqj6dCEjZsGO3Dt3QKjPYRkmfqh3qvnoB+3+s68I+/xoNWUOwzGQnrVge8bqui/7GzEG1fiCmYkmfKENzCSgRrQumR8QrZDzzFmgu/43eL9s/xknP4kMVxCwUt5WE7BWAXuRVxIAKYxOhJkNllX9oy0ePtxnS/Fi2wgzkVUPKiRqTvNF/i1bNgrPQ94u/r+OV8f5QYfpkrRE/jD8w2XPWbR/Hgn9VPJpDZ5z/4rrYaPExyKS2KycaMDFPkjEAFqV7Wad+EIontZdM1JjA4PQGMxQWJ3DM3Fryd81vL/JCL7d94w48QzRZOfN6vxSAnNLJDSbEJXSx/iyeGloIvo9XMEIkauWlBhG4Yljvo5R4tYggawKvWIJeqiItHAsUvEJVsGQT+DfIkiyKgUI/L5KWKIlkFmgC/PgeFhbd87P0NdAyJwravvWiNsTmvT7HowvwImLZrKe3/SQRGQ02mMwZvv2/4NhrwYsR/s=

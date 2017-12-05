@@ -13,6 +13,8 @@ It is an example implementation of online chat system using WebSocket.
 Websocket を使ったチャットの実装例です。
 このツールは、コミュニティ [eLV](http://www.elv.tokyo/) の活動の一環で生まれました。
 
+とりあえず動かしてみたい方は [How to Use](HOW_TO_USE.md) をご覧ください。
+
 ## 必要なもの Requirement
 
 サーバの実行は、Windows、Mac、Linux 上で動きます。
@@ -21,52 +23,7 @@ Websocket を使ったチャットの実装例です。
 ## 使い方 Usage
 
 設定ファイルを配置し、実行します。
-サーバ役ホストの IP アドレスを調べておいてください。
-
-### 初期設定
-
-``tavle.tml.sample`` を ``tavle.tml`` という名前にコピーし、
-[Server] の Endpoint と Port を適切に修正してください (設定項目は大文字小文字を区別します)。
-
-### サーバの起動
-
-    $ ./tavle -c tavle.tml
-
-Windows の場合は、 実行ファイルは tavle.exe という名称です。
-tavle.tml が同じディレクトリにある場合には、``-c`` オプションは省略可能です。
-
-### クライアントからの接続
-
-起動の後、ブラウザで http://localhost:8000/ にアクセスしてみてください。
-ポート番号は、設定ファイルにて指定したものに読み替えてください。
-
-ログイン画面が開きますので、入力してください。
-
-* ユーザ名: 必須です。
-* メールアドレス: メールアドレスは任意です (gravater と連携します)。
-* ルーム名: 省略すると、デフォルトのホワイエ (foyer) に入ります。
-
-
-#### [TroubleShooting] 接続できない時
-
-サーバおよび、クライアントのファイアウォールを確認してください。
-
-  * セキュリティソフトウェア
-  * OS
-  * ネットワーク経路
-
-#### [KnownIssue] ブラウザの再読み込みで、チャット履歴が消える。
-
-ブラウザ再読み込みすると、画面がクリアされます。
-(送信済みのメッセージは、相手側では見えたままです)
-
-
-### SSL/TLS 証明書
-
-設定ファイルの ``[Server]`` の ``EnableTLS`` を ``true`` にし、
-``CertFile`` と ``KeyFile`` にサーバ証明書、鍵ファイルのパスを指定してください。
-
-OpenSSL で作るサンプルを、ソース版の contrib/create_certs.sh に置いてあります。
+[How to Use](HOW_TO_USE.md) をご覧ください。
 
 ## インストール方法 Install
 
