@@ -1,0 +1,28 @@
+#
+#
+# This config should be noted in TOML.
+# See also https://github.com/toml-lang/toml
+
+[Server]
+#  Endpoint 待受ける IP
+#  Port 待受けポート
+Endpoint = ""
+Port    = 8000
+#  Debug デバッグモード
+Debug = true
+#  EnableTLS 暗号化通信を有効にするかどうか (KeyFile と CertFile も必要)
+#  KeyFile サーバ鍵
+#  CertFile サーバ証明書
+EnableTLS = false
+CertFile = ""
+KeyFile = ""
+# DataDir チャット履歴の保管ディレクトリ
+DataDir = "chatlog"
+
+[Log]
+# AccessLog クライアントからのアクセスログ
+# ServerLog サーバの動作ログ
+AccessLog = "log/access.log"
+#ServerLog = "log/server.log"
+# Level ログレベル
+Level = "INFO"
