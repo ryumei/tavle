@@ -1,12 +1,16 @@
 language: go
 go:
   - 1.9
+env:
+  - DOCKER_REPO=ryumei/tavle
 services:
   - docker
 install:
   - go get -u github.com/golang/lint/golint
   - make deps
   - cp tavle.tml.sample tavle.tml
+before_script:
+  - echo DOCKER_REPO -> $DOCKER_REPO
 script:
   - make dist
 after_success:
