@@ -10,14 +10,14 @@ install:
   - make deps
   - cp tavle.tml.sample tavle.tml
 before_script:
-  - echo DOCKER_REPO -> $DOCKER_REPO
+  - echo "DOCKER_REPO -> $DOCKER_REPO"
 script:
   - make dist
 after_success:
   - if [ "x$TRAVIS_BRANCH" == "xmaster" -a "x$TRAVIS_TAG" != "x" ]; then
-    docker build -t ryumei/tavle .;
+    docker build -t $DOCKER_REPO .;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker push ryumei/tavle;
+    docker push $DOCKER_REPO;
     fi
 deploy:
   provider: releases
