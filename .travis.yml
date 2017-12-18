@@ -11,7 +11,7 @@ script:
   - make dist
 after_success:
   - if [ "x$TRAVIS_BRANCH" == "xmaster" ]; then
-    docker build -t ryumei/tavle .
+    docker build -t ryumei/tavle .;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push ryumei/tavle;
     fi
