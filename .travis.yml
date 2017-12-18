@@ -1,12 +1,22 @@
 language: go
 go:
-- 1.9
+  - 1.9
+env:
+  - DOCKER_REPO=ryumei/tavle
+services:
+  - docker
 install:
-- go get -u github.com/golang/lint/golint
-- make deps
-- cp tavle.tml.sample tavle.tml
+  - go get -u github.com/golang/lint/golint
+  - make deps
+  - cp tavle.tml.sample tavle.tml
 script:
-- make dist
+  - make dist
+after_success:
+  - if ["$TRAVIS_BRANCH" == "master"]; then
+    docker build -t $DOCKER_REPO .
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+    docker push $DOCKER_REPO;
+    fi
 deploy:
   provider: releases
   skip_cleanup: true
