@@ -61,8 +61,13 @@ new Vue({
         }
     },
     methods: {
-        send: function () {
+        send: function (event) {
+            if (event.shiftKey) {
+                console.log("shift enter"); //###########
+                return;
+            }
             if (this.newMsg != '') {
+                console.log("enter"); //###########
                 this.ws.send(
                     JSON.stringify({
                         email: this.email,
