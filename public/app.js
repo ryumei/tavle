@@ -26,6 +26,10 @@ var connectWs = function(vueBase) {
     });
 }            
 
+var escapeNewline = function(str) {
+    return str.replace(/\n/g, "<br/>");
+}
+
 new Vue({
     el: '#app',
 
@@ -63,17 +67,21 @@ new Vue({
     methods: {
         send: function (event) {
             if (event.shiftKey) {
-                console.log("shift enter"); //###########
                 return;
             }
             if (this.newMsg != '') {
-                console.log("enter"); //###########
+                console.log(this.newMsg);
+                msg = escapeNewline(this.newMsg);
+                // TODO should escape others
+                console.log(msg);
+                console.log($('<p>').html(msg));
+
                 this.ws.send(
                     JSON.stringify({
                         email: this.email,
                         username: this.username,
                         room: this.room,
-                        message: $('<p>').html(this.newMsg).text() // Strip out html
+                        message: $('<p>').html(msg).text() // Strip out html //TODO should be changed v-html to component
                     }
                 ));
                 this.newMsg = ''; // Reset newMsg
