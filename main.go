@@ -9,6 +9,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 
@@ -159,8 +160,10 @@ func main() {
 
 	//TODO
 	if conf.Server.EnableTLS {
-		log.Println("[INFO] TLS enabled..")
-		err := server.ServeTLS(listener, "cert.pem", "key.pem")
+		certFilePath, _ := filepath.Abs(conf.Server.CertFile)
+		keyFilePath, _ := filepath.Abs(conf.Server.KeyFile)
+		log.Printf("[INFO] TLS enabled. cert: %v key: %v", certFilePath, keyFilePath)
+		err := server.ServeTLS(listener, certFilePath, keyFilePath)
 		log.Fatal(err)
 	} else {
 		log.Println("[INFO] TLS disabled.")
