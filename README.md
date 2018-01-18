@@ -30,6 +30,13 @@ Websocket を使ったチャットの実装例です。
 ビルド済みのバイナリを入手し、展開してください。
 ビルドする場合は、次の節も参考にしてください。
 
+### with Docker
+
+```
+$ docker pull ryumei/tavle
+$ docker run -p 18080:8000 ryumei/tavle
+```
+
 ## 開発者向け情報 How to Build
 
 ### 開発作業確認済み環境情報
