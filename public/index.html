@@ -23,7 +23,8 @@
         <div class="row">
             <div class="col s12">
                 <div class="card horizontal">
-                    <div id="chat-messages" class="card-content" v-html="chatContent">/* TODO should be change v-html to component*/
+                    <div id="chat-messages" class="card-content">
+                        <timeline v-for="post in talkTimeline" v-bind:msg="post"></timeline>
                     </div>
                 </div>
             </div>

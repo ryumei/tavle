@@ -15,11 +15,11 @@ var connectWs = function(vueBase) {
         avatarImg = (msg.email != "")
             ? '<img src="' + self.gravatarURL(msg.email) + '">'
             : '';
-
-        self.chatContent += '<div class="chip">'
-            + avatarImg + msg.username
-            + '</div>'
-            + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
+        self.talkTimeline.push({
+                avaterImg: 'avater',
+                username: msg.username,
+                message: emojione.toImage(msg.message)
+        });
 
         var element = document.getElementById('chat-messages');
         element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
@@ -30,13 +30,19 @@ var escapeNewline = function(str) {
     return str.replace(/\n/g, "<br/>");
 }
 
+// timeline component
+Vue.component('timeline', {
+    props: ['msg'],
+    template: '<div class="post"><div class="chip">{{ msg.avaterImg }}{{msg.username}}</div> {{ msg.message }}</div>',
+})
+
 new Vue({
     el: '#app',
 
     data: {
         ws: null, // Our websocket
         newMsg: '', // Holds new messages to be sent to the server
-        chatContent: '', // A running list of chat messages displayed on the screen
+        talkTimeline: [], // A running list of chat messages displayed on the screen
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
         room: null, // Unique room name
@@ -70,21 +76,25 @@ new Vue({
                 return;
             }
             if (this.newMsg != '') {
-                console.log(this.newMsg);
-                msg = escapeNewline(this.newMsg);
-                // TODO should escape others
-                console.log(msg);
-                console.log($('<p>').html(msg));
+                //msg = escapeNewline(this.newMsg);
+                msg = this.newMsg
 
+                console.log(this.newMsg);                
+                console.log($('<p>').html(msg).html());//DEBUG
                 this.ws.send(
                     JSON.stringify({
                         email: this.email,
                         username: this.username,
                         room: this.room,
-                        message: $('<p>').html(msg).text() // Strip out html //TODO should be changed v-html to component
+                        message: $('<p>').html(msg).text() // Strip out html
                     }
                 ));
+
+                //TODO きちんとクリアされている？
+                console.log("1");//DEBUG
                 this.newMsg = ''; // Reset newMsg
+                this.newMsg = '';
+                console.log("2 cleared?");//DEBUG
             }
         },
         join: function () {
@@ -105,7 +115,7 @@ new Vue({
                 username: this.username,
                 email: this.email,
                 room: this.room
-            }));         
+            }));
             this.$session.set("joined", true);
 
             // Initialize WebSocket connection
