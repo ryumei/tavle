@@ -1,6 +1,12 @@
 Vue.config.devtools = true
 Vue.use(VueSessionStorage)
 
+Vue.filter('gravatarFilter', function(hash) {
+    return (hash != "")
+        ? '<img src="https://s.gravatar.com/avatar/' + hash + '" />'
+        : "";
+})
+
 // Initialize WebSocket connection
 var connectWs = function(vueBase) {
     var self = vueBase;
@@ -11,12 +17,8 @@ var connectWs = function(vueBase) {
     vueBase.ws.addEventListener('message', function(e) {
         console.log('[DEBUG] Receive data from the server: ' + e.data);
         var msg = JSON.parse(e.data);
-
-        avatarImg = (msg.email != "")
-            ? '<img src="' + self.gravatarURL(msg.email) + '">'
-            : '';
         self.talkTimeline.push({
-                avaterImg: 'avater',
+                avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
                 username: msg.username,
                 message: emojione.toImage(msg.message)
         });
@@ -33,7 +35,9 @@ var escapeNewline = function(str) {
 // timeline component
 Vue.component('timeline', {
     props: ['msg'],
-    template: '<div class="post"><div class="chip">{{ msg.avaterImg }}{{msg.username}}</div> {{ msg.message }}</div>',
+    template: '<div class="post">' + 
+        '<div class="chip"><span v-html="msg.avatarImg"></span> {{msg.username}}</div> ' +
+        '{{ msg.message }}</div>',
 })
 
 new Vue({
@@ -120,9 +124,6 @@ new Vue({
 
             // Initialize WebSocket connection
             connectWs(this);
-        },
-        gravatarURL: function(email) {
-            return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
         }
     }
 });
