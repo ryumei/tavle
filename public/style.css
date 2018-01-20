@@ -37,3 +37,8 @@ main {
     color: #eee;
     */
 }
+
+/* message input form */
+#message {
+    height: 1rem;
+}

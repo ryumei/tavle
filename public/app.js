@@ -20,9 +20,13 @@ var connectWs = function(vueBase) {
             username: msg.username,
             message: message
         });
-
+        //if ($('.toast').length == 0) {
+        //Materialize.toast('Unread messages', 3000);
+        //}
+        /*
         var element = document.getElementById('chat-messages');
         element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
+        */
     });
 }            
 
