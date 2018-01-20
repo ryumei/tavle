@@ -88,6 +88,7 @@ new Vue({
                     }
                 ));
                 this.newMsg = ''; // Reset newMsg
+                $('#message').val("");  // Force reset Firefox with enter key
             }
         },
         join: function () {
