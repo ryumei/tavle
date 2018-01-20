@@ -1,12 +1,6 @@
 Vue.config.devtools = true
 Vue.use(VueSessionStorage)
 
-Vue.filter('gravatarFilter', function(hash) {
-    return (hash != "")
-        ? '<img src="https://s.gravatar.com/avatar/' + hash + '" />'
-        : "";
-})
-
 // Initialize WebSocket connection
 var connectWs = function(vueBase) {
     var self = vueBase;
@@ -20,7 +14,6 @@ var connectWs = function(vueBase) {
         //NOTE: Received data have been sanitized on the serverside
         var msg = JSON.parse(e.data);
         var message = emojione.toImage(msg.message.replace(/\r?\n/g, '<br/>'));
-        console.log(message);
 
         self.talkTimeline.push({
             avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
