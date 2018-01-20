@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -46,6 +47,13 @@ type connection struct {
 	send chan []byte
 }
 
+// Sanitizer sanitize inputs from client browser
+var Sanitizer = bluemonday.UGCPolicy()
+
+func sanitize(s string) string {
+	return Sanitizer.Sanitize(strings.TrimSpace(s))
+}
+
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
@@ -76,8 +84,7 @@ func (sub subscription) readPump() {
 		rawMessage = bytes.TrimSpace(bytes.Replace(rawMessage, newline, space, -1))
 		var m Message
 		json.Unmarshal(rawMessage, &m)
-		p := bluemonday.UGCPolicy()
-		m.Message = p.Sanitize(m.Message)
+		m.Message = sanitize(m.Message)
 
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
