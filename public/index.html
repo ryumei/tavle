@@ -23,14 +23,16 @@
         <div class="row">
             <div class="col s12">
                 <div class="card horizontal">
-                    <div id="chat-messages" class="card-content" v-html="chatContent">
+                    <div id="chat-messages" class="card-content">
+                        <timeline v-for="post in talkTimeline" v-bind:msg="post"></timeline>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row" v-if="joined">
-            <div class="input-field col s8">
-                <input type="text" v-model="newMsg" @keyup.down="send">
+            <div class="input-field col s12">
+                <textarea id="message" v-model="newMsg" @keypress.enter="send" class="materialize-textarea" rows=1></textarea>
+                <label for="message">message</label>
             </div>
             <div class="input-field col s4">
                 <button class="waves-effect waves-light btn yellow darken-4" @click="send">

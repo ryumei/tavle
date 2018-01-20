@@ -10,21 +10,33 @@ var connectWs = function(vueBase) {
     
     vueBase.ws.addEventListener('message', function(e) {
         console.log('[DEBUG] Receive data from the server: ' + e.data);
+        
+        //NOTE: Received data have been sanitized on the serverside
         var msg = JSON.parse(e.data);
+        var message = emojione.toImage(msg.message.replace(/\r?\n/g, '<br/>'));
 
-        avatarImg = (msg.email != "")
-            ? '<img src="' + self.gravatarURL(msg.email) + '">'
-            : '';
-
-        self.chatContent += '<div class="chip">'
-            + avatarImg + msg.username
-            + '</div>'
-            + emojione.toImage(msg.message) + '<br/>'; // Parse emojis
+        self.talkTimeline.push({
+            avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
+            username: msg.username,
+            message: message
+        });
 
         var element = document.getElementById('chat-messages');
         element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
     });
 }            
+
+var escapeNewline = function(str) {
+    return str.replace(/\n/g, "<br/>");
+}
+
+// timeline component
+Vue.component('timeline', {
+    props: ['msg'],
+    template: '<div class="post">' + 
+        '<div class="chip"><span v-html="msg.avatarImg"></span> {{msg.username}}</div> ' +
+        '<span v-html="msg.message"></span></div>',
+})
 
 new Vue({
     el: '#app',
@@ -32,7 +44,7 @@ new Vue({
     data: {
         ws: null, // Our websocket
         newMsg: '', // Holds new messages to be sent to the server
-        chatContent: '', // A running list of chat messages displayed on the screen
+        talkTimeline: [], // A running list of chat messages displayed on the screen
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
         room: null, // Unique room name
@@ -61,17 +73,22 @@ new Vue({
         }
     },
     methods: {
-        send: function () {
+        send: function (event) {
+            if (event.shiftKey) {
+                return;
+            }
             if (this.newMsg != '') {
+                msg = this.newMsg
                 this.ws.send(
                     JSON.stringify({
                         email: this.email,
                         username: this.username,
                         room: this.room,
-                        message: $('<p>').html(this.newMsg).text() // Strip out html
+                        message: $('<p>').html(msg).html()  // message should be sanitized on the server side
                     }
                 ));
                 this.newMsg = ''; // Reset newMsg
+                $('#message').val("");  // Force reset Firefox with enter key
             }
         },
         join: function () {
@@ -92,14 +109,11 @@ new Vue({
                 username: this.username,
                 email: this.email,
                 room: this.room
-            }));         
+            }));
             this.$session.set("joined", true);
 
             // Initialize WebSocket connection
             connectWs(this);
-        },
-        gravatarURL: function(email) {
-            return 'https://s.gravatar.com/avatar/' + CryptoJS.MD5(email);
         }
     }
 });

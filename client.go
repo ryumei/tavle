@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 const (
@@ -75,6 +76,9 @@ func (sub subscription) readPump() {
 		rawMessage = bytes.TrimSpace(bytes.Replace(rawMessage, newline, space, -1))
 		var m Message
 		json.Unmarshal(rawMessage, &m)
+		p := bluemonday.UGCPolicy()
+		m.Message = p.Sanitize(m.Message)
+
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
 	}
