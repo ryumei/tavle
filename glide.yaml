@@ -7,3 +7,5 @@ import:
   - package: github.com/gorilla/mux
   - package: github.com/BurntSushi/toml
   - package: github.com/hashicorp/logutils
+  - package: golang.org/x/net/html
+  - package: github.com/microcosm-cc/bluemonday

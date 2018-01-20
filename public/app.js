@@ -16,11 +16,16 @@ var connectWs = function(vueBase) {
     
     vueBase.ws.addEventListener('message', function(e) {
         console.log('[DEBUG] Receive data from the server: ' + e.data);
+        
+        //NOTE: Received data have been sanitized on the serverside
         var msg = JSON.parse(e.data);
+        var message = emojione.toImage(msg.message.replace(/\r?\n/g, '<br/>'));
+        console.log(message);
+
         self.talkTimeline.push({
-                avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
-                username: msg.username,
-                message: emojione.toImage(msg.message)
+            avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
+            username: msg.username,
+            message: message
         });
 
         var element = document.getElementById('chat-messages');
@@ -37,7 +42,7 @@ Vue.component('timeline', {
     props: ['msg'],
     template: '<div class="post">' + 
         '<div class="chip"><span v-html="msg.avatarImg"></span> {{msg.username}}</div> ' +
-        '{{ msg.message }}</div>',
+        '<span v-html="msg.message"></span></div>',
 })
 
 new Vue({
@@ -80,25 +85,16 @@ new Vue({
                 return;
             }
             if (this.newMsg != '') {
-                //msg = escapeNewline(this.newMsg);
                 msg = this.newMsg
-
-                console.log(this.newMsg);                
-                console.log($('<p>').html(msg).html());//DEBUG
                 this.ws.send(
                     JSON.stringify({
                         email: this.email,
                         username: this.username,
                         room: this.room,
-                        message: $('<p>').html(msg).text() // Strip out html
+                        message: $('<p>').html(msg).html()  // message should be sanitized on the server side
                     }
                 ));
-
-                //TODO きちんとクリアされている？
-                console.log("1");//DEBUG
                 this.newMsg = ''; // Reset newMsg
-                this.newMsg = '';
-                console.log("2 cleared?");//DEBUG
             }
         },
         join: function () {
