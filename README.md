@@ -44,6 +44,13 @@ $ docker run -p 18080:8000 ryumei/tavle
 * Go (v1.9)
 * glide (v0.12.3)
 
+### 利用している OSS / Working with OSS
+
+* [gorilla/websocket](https://github.com/gorilla/websocket) for server side
+* [Vue.js](https://vuejs.org) for client
+* [Materialize](http://materializecss.com) for client side
+
+
 ### ビルド方法
 
 ```
