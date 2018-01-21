@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -31,6 +32,7 @@ const (
 var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
+	tab     = []byte{'\t'}
 )
 
 var upgrader = websocket.Upgrader{
@@ -55,7 +57,7 @@ func sanitize(s string) string {
 }
 
 // sanitizePost is desctructive sanitization
-func sanitizedMessage(raw []byte) Message {
+func sanitizedMessage(raw []byte) (Message, error) {
 	raw = bytes.TrimSpace(bytes.Replace(raw, newline, space, -1))
 	var m Message
 	json.Unmarshal(raw, &m)
@@ -63,8 +65,12 @@ func sanitizedMessage(raw []byte) Message {
 	m.Message = sanitize(m.Message)
 	m.Email = sanitize(m.Email)
 	m.Username = sanitize(m.Username)
+	if m.Message == "" {
+		return m, errors.New("Empty message")
+	}
+	log.Printf("[DEBUG] received message '%s'", m.Message)
 
-	return m
+	return m, nil
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -94,7 +100,11 @@ func (sub subscription) readPump() {
 			}
 			break
 		}
-		m := sanitizedMessage(rawMessage)
+		m, err := sanitizedMessage(rawMessage)
+		if err != nil {
+			log.Printf("[WARN] %v", err)
+			continue
+		}
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
 	}

@@ -20,6 +20,8 @@ var connectWs = function(vueBase) {
             username: msg.username,
             message: message
         });
+
+        //TODO: notify new messages have arrived
         //if ($('.toast').length == 0) {
         //Materialize.toast('Unread messages', 3000);
         //}
