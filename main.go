@@ -134,9 +134,11 @@ func main() {
 
 	// 保管用ディレクトリの準備
 	dataDirPath := conf.Server.DataDir
-	if err := os.Mkdir(dataDirPath, os.ModePerm); err != nil {
-		log.Printf("[WARN] %v", err)
-		dataDirPath = "."
+	if _, err := os.Stat(dataDirPath); err != nil {
+		if err := os.Mkdir(dataDirPath, os.ModePerm); err != nil {
+			log.Printf("[WARN] %v", err)
+			dataDirPath = "."
+		}
 	}
 
 	// 標準出力用ゴルーチン起動

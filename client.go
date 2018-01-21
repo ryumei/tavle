@@ -54,6 +54,19 @@ func sanitize(s string) string {
 	return Sanitizer.Sanitize(strings.TrimSpace(s))
 }
 
+// sanitizePost is desctructive sanitization
+func sanitizedMessage(raw []byte) Message {
+	raw = bytes.TrimSpace(bytes.Replace(raw, newline, space, -1))
+	var m Message
+	json.Unmarshal(raw, &m)
+	m.Room = sanitize(m.Room)
+	m.Message = sanitize(m.Message)
+	m.Email = sanitize(m.Email)
+	m.Username = sanitize(m.Username)
+
+	return m
+}
+
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
@@ -81,11 +94,7 @@ func (sub subscription) readPump() {
 			}
 			break
 		}
-		rawMessage = bytes.TrimSpace(bytes.Replace(rawMessage, newline, space, -1))
-		var m Message
-		json.Unmarshal(rawMessage, &m)
-		m.Message = sanitize(m.Message)
-
+		m := sanitizedMessage(rawMessage)
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
 	}
