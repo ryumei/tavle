@@ -2,38 +2,19 @@ body {
     display: flex;
     min-height: 100vh;
     flex-direction: column;
-    /*
-    background-color: #030;
-    color: #eee;
-    */
 }
-/*
-nav {
-    background-color: #844;
-    color: #eee;   
-}
-*/
-/*
-footer.page-footer .footer-copyright {
-    background-color: #844;
-    color: #eee;   
-}
-*/
 main {
     flex: 1 0 auto;
-    /*
-    background-color: #030;
-    color: #eee;
-    */
 }
 
 #chat-messages {
     min-height: 10vh;
-    height: 60vh;
+    height: 40vh;
     width: 100%;
     overflow-y: scroll;
-    /*
-    background-color: #030;
-    color: #eee;
-    */
+}
+
+/* message input form */
+#message {
+    height: 1rem;
 }

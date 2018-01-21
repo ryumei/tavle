@@ -21,8 +21,14 @@ var connectWs = function(vueBase) {
             message: message
         });
 
+        //TODO: notify new messages have arrived
+        //if ($('.toast').length == 0) {
+        //Materialize.toast('Unread messages', 3000);
+        //}
+        /*
         var element = document.getElementById('chat-messages');
         element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
+        */
     });
 }            
 
