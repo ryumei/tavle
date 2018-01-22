@@ -91,10 +91,18 @@ func TestValidCase(t *testing.T) {
 	if err = json.Unmarshal([]byte(res), &result); err != nil {
 		t.Error(err)
 	}
-	if expected0 != *result {
-		t.Errorf("Response is not valid '%s' <> '%s'", expected0, *result)
+	if expected0.Email != result.Email {
+		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Email, result.Email)
 	}
-
+	if expected0.Username != result.Username {
+		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Username, result.Username)
+	}
+	if expected0.Room != result.Room {
+		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Room, result.Room)
+	}
+	if expected0.Message != result.Message {
+		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Message, result.Message)
+	}
 	// Send and receive
 	/*
 		expected := Message{
