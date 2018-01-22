@@ -105,6 +105,20 @@ func (sub subscription) readPump() {
 			log.Printf("[WARN] %v", err)
 			continue
 		}
+
+		//TODO Reload request: sub.conn.send
+		if m.Message == "RELOAD" {
+			adminMessage := Message{
+				Email:     "admin@tavle.example.com",
+				Username:  "Tavle Admin",
+				Message:   "Reloading",
+				Room:      m.Room,
+				Timestamp: time.Now(),
+			}
+			rawMessage, _ := json.Marshal(adminMessage)
+			sub.conn.send <- rawMessage
+		}
+
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
 	}
@@ -175,10 +189,11 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go sub.readPump()
 
 	welcomMessage := Message{
-		Email:    "admin@tavle.example.com",
-		Username: "Tavle Admin",
-		Message:  fmt.Sprintf("Welcome to room '%s'", room),
-		Room:     room,
+		Email:     "admin@tavle.example.com",
+		Username:  "Tavle Admin",
+		Message:   fmt.Sprintf("Welcome to room '%s'", room),
+		Room:      room,
+		Timestamp: time.Now(),
 	}
 	rawMessage, err := json.Marshal(welcomMessage)
 	if err != nil {

@@ -9,3 +9,4 @@ import:
   - package: github.com/hashicorp/logutils
   - package: golang.org/x/net/html
   - package: github.com/microcosm-cc/bluemonday
+  - package: github.com/boltdb/bolt
