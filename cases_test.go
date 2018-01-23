@@ -13,3 +13,12 @@ var roomnameTests = []struct {
 	{"with dot", "test.room", "test.room"},
 	{"with number ", "testroom1", "testroom1"},
 }
+
+var time2BytesTests = []struct {
+	descrption  string
+	timestampNs int64
+	bytes       []byte
+}{
+	{"Zero", 0, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+	{"arbitrary time", 1516696498000000, []byte{128, 208, 254, 107, 109, 99, 5, 0}},
+}

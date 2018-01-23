@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,14 +42,51 @@ func GetLatestDatabase(dataDir string, roomname string) (*bolt.DB, error) {
 	return db, err
 }
 
+func time2bytes(t time.Time) []byte {
+	b := make([]byte, 8)
+	ns := t.UnixNano()
+	binary.LittleEndian.PutUint64(b, uint64(ns))
+	return b
+}
+
+func bytes2time(b []byte) time.Time {
+	ns := int64(binary.LittleEndian.Uint64(b))
+	return time.Unix(0, ns)
+}
+
+func TestTime2Bytes(t *testing.T) {
+	for _, item := range time2BytesTests {
+		expected := item.bytes
+		data := time.Unix(0, item.timestampNs)
+		result := time2bytes(data)
+
+		if !bytes.Equal(result, expected) {
+			t.Fatalf("[ERROR] %v <> %v for %v", result, item.bytes, item.timestampNs)
+		}
+	}
+}
+
+func TestBytes2Time(t *testing.T) {
+	for _, item := range time2BytesTests {
+		expected := item.timestampNs
+		data := item.bytes
+		result := bytes2time(data).UnixNano()
+
+		if result != expected {
+			t.Fatalf("[ERROR] %v <> %v for %v", result, item.bytes, item.timestampNs)
+		}
+	}
+}
+
 func WritePost(m Message) {
+	// now under implementing
 	dataDir := "."
 	db, err := GetLatestDatabase(dataDir, m.Room)
 	if err != nil {
 		log.Fatal(err)
 	}
 	bucketName := m.Timestamp.Format("2006.01.02")
-	key := m.Timestamp.UnmarshalBinary()
+	key := time2bytes(m.Timestamp)
 	jsonBytes, err := json.Marshal(m)
 	if err != nil {
 		log.Fatal(err)
@@ -57,13 +96,12 @@ func WritePost(m Message) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = bucket.Put([]byte(key), jsonBytes)
+		err = bucket.Put(key, jsonBytes)
 		if err != nil {
 			log.Fatal(err)
 		}
 		return nil
 	})
-
 }
 
 func TestGetLatestDatabase(t *testing.T) {
