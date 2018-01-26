@@ -3,64 +3,11 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
-	"encoding/binary"
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
-	"path/filepath"
+	"crypto/sha256"
+	"math/rand"
 	"testing"
 	"time"
-
-	"github.com/boltdb/bolt"
 )
-
-/*
- * DB file: room
- *   - date base bucket
- *     - key: timestamp
- * housekeeping -> keep 2 month events in database
- *
- * DB file: single
- *   - Room base bucket
- *     - key: timestamp (RFC3339)
- *
- * DB file: date base
- *   - room base bucket
- *     - key: timestamp
- */
-
-func GetLatestDatabase(dataDir string, roomname string) (*bolt.DB, error) {
-	dbFile := fmt.Sprintf("%s-%s.db", roomname, time.Now().Format("2006.01.02"))
-
-	_, err := os.Stat(dataDir)
-	if err != nil {
-		if err := os.MkdirAll(dataDir, 0755); err != nil {
-			log.Fatalf("Failed to created data dir %s. %v", dataDir, err)
-		}
-	}
-	dbPath := filepath.Join(dataDir, dbFile)
-	db, err := bolt.Open(dbPath, 0600, nil)
-	return db, err
-}
-
-/*
- * 64bit の timestamp と
- * ユーザ ID をハッシュした固定長 bytes
- * 順序は ns のタイムスタンプで許してもらおう。
- */
-
-func time2bytes(t time.Time) []byte {
-	b := make([]byte, 8)
-	ns := t.UTC().UnixNano()
-	binary.LittleEndian.PutUint64(b, uint64(ns))
-	return b
-}
-
-func bytes2time(b []byte) time.Time {
-	ns := int64(binary.LittleEndian.Uint64(b))
-	return time.Unix(0, ns)
-}
 
 func TestTime2Bytes(t *testing.T) {
 	for _, item := range time2BytesTests {
@@ -86,7 +33,49 @@ func TestBytes2Time(t *testing.T) {
 	}
 }
 
-func key(t time.Time, user string) []byte {
+func TestDBKey(t *testing.T) {
+	for _, item := range genkeyTests {
+		expected := item.bytes
+		result := dbKeySHA1(item.timestamp, item.username)
+		if len(result) != 28 {
+			t.Fatalf("Invalid hash length %d", len(result))
+		}
+
+		if !bytes.Equal(result, expected) {
+			t.Fatalf("[ERROR] result %v <> expected %v", result, expected)
+		}
+
+		sameResult := dbKeySHA1(item.timestamp, item.username)
+		if !bytes.Equal(result, sameResult) {
+			t.Fatalf("[ERROR] result1 %v <> result2 %v", result, sameResult)
+		}
+
+		anotherResult := dbKeySHA1(item.timestamp, item.username+"another")
+		if bytes.Equal(result, anotherResult) {
+			t.Fatalf("[ERROR] result1 %v == result2 %v", result, anotherResult)
+		}
+	}
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+/*
+ *
+ * BenchmarkDBKeyMD5-8      	 5000000	       457 ns/op
+ * BenchmarkDBKeySHA1-8     	 3000000	       539 ns/op
+ * BenchmarkDBKeySHA256-8   	 2000000	       772 ns/op
+ */
+
+// just for reference
+func dbKeyMD5(t time.Time, user string) []byte {
 	var k = make([]byte, 0, 8+md5.Size)
 	for _, c := range time2bytes(t) {
 		k = append(k, c)
@@ -97,68 +86,68 @@ func key(t time.Time, user string) []byte {
 	return k
 }
 
-func TestKey(t *testing.T) {
-	for _, item := range genkeyTests {
-		expected := item.bytes
-		result := key(item.timestamp, item.username)
-		if len(result) != 24 {
-			t.Fatalf("Invalid hash length %d", len(result))
-		}
+// just for reference
+func dbKeySHA256(t time.Time, user string) []byte {
+	var k = make([]byte, 0, 8+sha256.Size)
+	for _, c := range time2bytes(t) {
+		k = append(k, c)
+	}
+	for _, c := range sha256.Sum256([]byte(user)) {
+		k = append(k, c)
+	}
+	return k
+}
 
-		if !bytes.Equal(result, expected) {
-			t.Fatalf("[ERROR] result %v <> expected %v", result, expected)
-		}
-
-		sameResult := key(item.timestamp, item.username)
-		if !bytes.Equal(result, sameResult) {
-			t.Fatalf("[ERROR] result1 %v <> result2 %v", result, sameResult)
-		}
-
-		anotherResult := key(item.timestamp, item.username+"another")
-		if bytes.Equal(result, anotherResult) {
-			t.Fatalf("[ERROR] result1 %v == result2 %v", result, anotherResult)
-		}
-
+func BenchmarkDBKeyMD5(b *testing.B) {
+	username := RandStringBytes(32)
+	for i := 0; i < b.N; i++ {
+		dbKeyMD5(time.Now(), username)
 	}
 }
 
-func WritePost(m Message) {
-	// now under implementing
-	dataDir := "."
-	db, err := GetLatestDatabase(dataDir, m.Room)
-	if err != nil {
-		log.Fatal(err)
+func BenchmarkDBKeySHA1(b *testing.B) {
+	username := RandStringBytes(32)
+	for i := 0; i < b.N; i++ {
+		dbKeySHA1(time.Now(), username)
 	}
-	bucketName := m.Timestamp.Format("2006.01.02")
-	key := time2bytes(m.Timestamp)
-	jsonBytes, err := json.Marshal(m)
-	if err != nil {
-		log.Fatal(err)
-	}
-	db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(bucketName))
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = bucket.Put(key, jsonBytes)
-		if err != nil {
-			log.Fatal(err)
-		}
-		return nil
-	})
 }
 
-func TestGetLatestDatabase(t *testing.T) {
+func BenchmarkDBKeySHA256(b *testing.B) {
+	username := RandStringBytes(32)
+	for i := 0; i < b.N; i++ {
+		dbKeySHA256(time.Now(), username)
+	}
+}
+
+func TestGetDatabase(t *testing.T) {
 	dataDir := "test"
 	roomname := "testroom"
 
-	//n := time.Now()
-	//log.Println(n.Format(time.RFC3339))
-	//log.Fatalln(n.UTC().Format(time.RFC3339))
-
-	db, err := GetLatestDatabase(dataDir, roomname)
+	db, err := GetWritableDB(dataDir, roomname)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer db.Close()
+}
+
+func TestReadPost(t *testing.T) {
+	var roomname = "testroom"
+	var dataDir = "test"
+
+	msg := Message{
+		Email:     "test@tavle.example.com",
+		Username:  "Tavle Test",
+		Message:   "テストメッセージ",
+		Room:      roomname,
+		Timestamp: time.Now(),
+	}
+
+	WritePost(msg, dataDir)
+
+	ReadPosts(
+		roomname,
+		time.Now(),
+		86400,
+		dataDir,
+	)
 }
