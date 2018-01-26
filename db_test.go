@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -22,7 +23,7 @@ import (
  *
  * DB file: single
  *   - Room base bucket
- *     - key: timestamp
+ *     - key: timestamp (RFC3339)
  *
  * DB file: date base
  *   - room base bucket
@@ -31,6 +32,7 @@ import (
 
 func GetLatestDatabase(dataDir string, roomname string) (*bolt.DB, error) {
 	dbFile := fmt.Sprintf("%s-%s.db", roomname, time.Now().Format("2006.01.02"))
+
 	_, err := os.Stat(dataDir)
 	if err != nil {
 		if err := os.MkdirAll(dataDir, 0755); err != nil {
@@ -42,9 +44,15 @@ func GetLatestDatabase(dataDir string, roomname string) (*bolt.DB, error) {
 	return db, err
 }
 
+/*
+ * 64bit の timestamp と
+ * ユーザ ID をハッシュした固定長 bytes
+ * 順序は ns のタイムスタンプで許してもらおう。
+ */
+
 func time2bytes(t time.Time) []byte {
 	b := make([]byte, 8)
-	ns := t.UnixNano()
+	ns := t.UTC().UnixNano()
 	binary.LittleEndian.PutUint64(b, uint64(ns))
 	return b
 }
@@ -78,6 +86,42 @@ func TestBytes2Time(t *testing.T) {
 	}
 }
 
+func key(t time.Time, user string) []byte {
+	var k = make([]byte, 0, 8+md5.Size)
+	for _, c := range time2bytes(t) {
+		k = append(k, c)
+	}
+	for _, c := range md5.Sum([]byte(user)) {
+		k = append(k, c)
+	}
+	return k
+}
+
+func TestKey(t *testing.T) {
+	for _, item := range genkeyTests {
+		expected := item.bytes
+		result := key(item.timestamp, item.username)
+		if len(result) != 24 {
+			t.Fatalf("Invalid hash length %d", len(result))
+		}
+
+		if !bytes.Equal(result, expected) {
+			t.Fatalf("[ERROR] result %v <> expected %v", result, expected)
+		}
+
+		sameResult := key(item.timestamp, item.username)
+		if !bytes.Equal(result, sameResult) {
+			t.Fatalf("[ERROR] result1 %v <> result2 %v", result, sameResult)
+		}
+
+		anotherResult := key(item.timestamp, item.username+"another")
+		if bytes.Equal(result, anotherResult) {
+			t.Fatalf("[ERROR] result1 %v == result2 %v", result, anotherResult)
+		}
+
+	}
+}
+
 func WritePost(m Message) {
 	// now under implementing
 	dataDir := "."
@@ -107,6 +151,10 @@ func WritePost(m Message) {
 func TestGetLatestDatabase(t *testing.T) {
 	dataDir := "test"
 	roomname := "testroom"
+
+	//n := time.Now()
+	//log.Println(n.Format(time.RFC3339))
+	//log.Fatalln(n.UTC().Format(time.RFC3339))
 
 	db, err := GetLatestDatabase(dataDir, roomname)
 	if err != nil {
