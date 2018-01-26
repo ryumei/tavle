@@ -63,6 +63,14 @@ $ make
 $ make dist
 ```
 
+#### Troubleshooting: ``golint not found``
+
+golint をインストールしてください。
+
+```
+$ go get -u github.com/golang/lint/golint
+```
+
 ## Contribution
 
 1. Fork
