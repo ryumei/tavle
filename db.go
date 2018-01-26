@@ -120,6 +120,8 @@ func WritePost(m Message, dataDir string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	//TODO encryption
+
 	db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucketName))
 		if err != nil {
@@ -154,17 +156,16 @@ func ReadPosts(room string, latest time.Time, durationSec int, dataDir string) {
 		bucketName := cursor.UTC().Format(BucketFormat)
 		//var messages []Message
 		db.View(func(tx *bolt.Tx) error {
-			log.Printf("helo 1 %v", bucketName)
 			bucket := tx.Bucket([]byte(bucketName))
 			if bucket == nil {
-				log.Println("[DEBUG] helo 2")
 				return nil // Skip. no bucket found
 			}
-			log.Println("[DEBUG] helo 3")
 
 			c := bucket.Cursor()
 			for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) < 0; k, v = c.Next() {
 				//TODO json marsharing for v
+				//TODO decryption
+
 				fmt.Printf("[DEBUG] %s: %s\n", k, v)
 			}
 
