@@ -56,3 +56,13 @@ var genkeyTests = []struct {
 		},
 	},
 }
+
+// crypto_test
+var encryptionTests = []struct {
+	description string
+	data        string
+	secret      string
+}{
+	{"Zero", "", "CHANGEME_16CHARS"},
+	{"arbitrary", "My message", "CHANGEME_16CHARS"},
+}
