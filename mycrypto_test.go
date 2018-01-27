@@ -1,12 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 )
 
 func TestEncrypt(t *testing.T) {
 	for _, item := range encryptionTests {
-		data := item.data
+		data := []byte(item.data)
 		secret := []byte(item.secret)
 
 		encrypted, err := Encrypt(data, secret)
@@ -19,7 +20,7 @@ func TestEncrypt(t *testing.T) {
 			t.Fatalf("%v", err)
 		}
 
-		if data != decrypted {
+		if !bytes.Equal([]byte(data), decrypted) {
 			t.Fatalf("Failed ecryption/decryption %v %v", data, decrypted)
 		}
 	}

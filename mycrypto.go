@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -46,18 +45,13 @@ func unpad(src []byte) ([]byte, error) {
 /*
  * secret length should be 16, 24, or 32
  */
-func Encrypt(data string, secret []byte) ([]byte, error) {
+func Encrypt(data []byte, secret []byte) ([]byte, error) {
 	block, err := aes.NewCipher(secret)
-	log.Printf("sss1")
 	if err != nil {
 		return []byte(""), err
 	}
-	log.Printf("sss2")
 
-	msg := pad([]byte(data))
-
-	log.Printf("sss3")
-
+	msg := pad(data)
 	ciphertext := make([]byte, aes.BlockSize+len(msg))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
@@ -71,18 +65,18 @@ func Encrypt(data string, secret []byte) ([]byte, error) {
 	return []byte(finalMsg), nil
 }
 
-func Decrypt(data []byte, secret []byte) (string, error) {
+func Decrypt(data []byte, secret []byte) ([]byte, error) {
 	block, err := aes.NewCipher(secret)
 	if err != nil {
-		return "", err
+		return []byte(""), err
 	}
 	decodedMsg, err := base64.URLEncoding.DecodeString(addBase64Padding(data))
 	if err != nil {
-		return "", err
+		return []byte(""), err
 	}
 
 	if (len(decodedMsg) % aes.BlockSize) != 0 {
-		return "", errors.New("blocksize must be multipe of decoded message length")
+		return []byte(""), errors.New("blocksize must be multipe of decoded message length")
 	}
 
 	iv := decodedMsg[:aes.BlockSize]
@@ -93,8 +87,8 @@ func Decrypt(data []byte, secret []byte) (string, error) {
 
 	unpadMsg, err := unpad(msg)
 	if err != nil {
-		return "", err
+		return []byte(""), err
 	}
 
-	return string(unpadMsg), nil
+	return unpadMsg, nil
 }
