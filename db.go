@@ -107,7 +107,7 @@ func dbBoundKeySHA1(t time.Time) []byte {
 }
 
 // SavePost メッセージを DB に保管します。
-func SavePost(m Message, dataDir string) {
+func SavePost(m Message, dataDir string, secret []byte) {
 	db, err := GetWritableDB(dataDir, m.Room)
 	if err != nil {
 		log.Fatal(err)
@@ -121,13 +121,17 @@ func SavePost(m Message, dataDir string) {
 		log.Fatal(err)
 	}
 	//TODO encryption
+	encrypted, err := Encrypt(jsonBytes, secret)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucketName))
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = bucket.Put(key, jsonBytes)
+		err = bucket.Put(key, encrypted)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -135,7 +139,7 @@ func SavePost(m Message, dataDir string) {
 	})
 }
 
-func LoadPosts(room string, latest time.Time, durationSec int, dataDir string) {
+func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, secret []byte) {
 	db, err := GetReadOnlyDB(dataDir, room)
 	if err != nil {
 		log.Fatal(err)
@@ -163,10 +167,14 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string) {
 
 			c := bucket.Cursor()
 			for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) < 0; k, v = c.Next() {
-				//TODO json marsharing for v
 				//TODO decryption
+				decrypted, err := Decrypt(v, secret)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-				fmt.Printf("[DEBUG] %s: %s\n", k, v)
+				//TODO json marsharing for v
+				fmt.Printf("[DEBUG] %s: %s\n", k, decrypted)
 			}
 
 			return nil

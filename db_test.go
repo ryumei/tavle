@@ -133,6 +133,7 @@ func TestGetDatabase(t *testing.T) {
 func TestReadPost(t *testing.T) {
 	var roomname = "testroom"
 	var dataDir = "test"
+	var secret = []byte("CHANGEME_16CHARS") // AWS restriction
 
 	msg := Message{
 		Email:     "test@tavle.example.com",
@@ -142,12 +143,13 @@ func TestReadPost(t *testing.T) {
 		Timestamp: time.Now(),
 	}
 
-	SavePost(msg, dataDir)
+	SavePost(msg, dataDir, secret)
 
 	LoadPosts(
 		roomname,
 		time.Now(),
 		86400,
 		dataDir,
+		secret,
 	)
 }

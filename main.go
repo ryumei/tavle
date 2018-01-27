@@ -44,6 +44,7 @@ type serverConfig struct {
 	KeyFile   string
 	CertFile  string
 	DataDir   string
+	Secret    string
 }
 
 // Global variables are usually a bad practice but we will use them this time for simplicity.
@@ -117,6 +118,8 @@ func main() {
 	}
 	defer listener.Close()
 
+	secret := []byte(conf.Server.Secret)
+
 	exitCh := make(chan int)
 	go func() {
 		sig := <-sigCh
@@ -153,7 +156,7 @@ func main() {
 				}
 
 				dectateCSV(msg, dataDirPath)
-				SavePost(msg, dataDirPath) //
+				SavePost(msg, dataDirPath, secret) //
 			}
 		}
 	}()
