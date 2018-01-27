@@ -106,8 +106,8 @@ func dbBoundKeySHA1(t time.Time) []byte {
 	return k
 }
 
-// WritePost メッセージを DB に保管します。
-func WritePost(m Message, dataDir string) {
+// SavePost メッセージを DB に保管します。
+func SavePost(m Message, dataDir string) {
 	db, err := GetWritableDB(dataDir, m.Room)
 	if err != nil {
 		log.Fatal(err)
@@ -135,7 +135,7 @@ func WritePost(m Message, dataDir string) {
 	})
 }
 
-func ReadPosts(room string, latest time.Time, durationSec int, dataDir string) {
+func LoadPosts(room string, latest time.Time, durationSec int, dataDir string) {
 	db, err := GetReadOnlyDB(dataDir, room)
 	if err != nil {
 		log.Fatal(err)

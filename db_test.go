@@ -142,9 +142,9 @@ func TestReadPost(t *testing.T) {
 		Timestamp: time.Now(),
 	}
 
-	WritePost(msg, dataDir)
+	SavePost(msg, dataDir)
 
-	ReadPosts(
+	LoadPosts(
 		roomname,
 		time.Now(),
 		86400,

@@ -151,7 +151,9 @@ func main() {
 					fmt.Println("writer channel is closed")
 					break loop
 				}
+
 				dectateCSV(msg, dataDirPath)
+				SavePost(msg, dataDirPath) //
 			}
 		}
 	}()
