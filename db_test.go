@@ -145,11 +145,19 @@ func TestReadPost(t *testing.T) {
 
 	SavePost(msg, dataDir, secret)
 
-	LoadPosts(
+	posts, err := LoadPosts(
 		roomname,
 		time.Now(),
 		86400,
 		dataDir,
 		secret,
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(posts) < 1 {
+		t.Fatalf("No posts found")
+	}
+
 }

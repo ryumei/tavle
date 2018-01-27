@@ -139,7 +139,7 @@ func SavePost(m Message, dataDir string, secret []byte) {
 	})
 }
 
-func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, secret []byte) {
+func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, secret []byte) ([]Message, error) {
 	db, err := GetReadOnlyDB(dataDir, room)
 	if err != nil {
 		log.Fatal(err)
@@ -155,6 +155,8 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, s
 
 	aDay := 24 * time.Hour
 	// latest -- cursor
+
+	var messages []Message
 	for cursor := earliest; latest.Sub(cursor)+aDay > 0; cursor = cursor.AddDate(0, 0, 1) {
 
 		bucketName := cursor.UTC().Format(BucketFormat)
@@ -172,6 +174,12 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, s
 				if err != nil {
 					log.Fatal(err)
 				}
+				var msg Message
+				if err := json.Unmarshal(decrypted, &msg); err != nil {
+					log.Println("[WARN] JSON Unmarshal error:", err)
+					continue
+				}
+				messages = append(messages, msg)
 
 				//TODO json marsharing for v
 				fmt.Printf("[DEBUG] %s: %s\n", k, decrypted)
@@ -183,4 +191,6 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, s
 	}
 
 	log.Printf("[DEBUG] Loop exited %v\n ", earliest)
+
+	return messages, nil
 }
