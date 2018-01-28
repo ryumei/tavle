@@ -76,12 +76,65 @@ func TestValidCase(t *testing.T) {
 
 	// 0. Welcome message
 
-	expected0 := Message{
-		Email:    "admin@tavle.example.com",
-		Username: "Tavle Admin",
-		Message:  "Welcome to room 'foyer'",
-		Room:     "foyer",
+	/*
+
+		expected0 := Message{
+			Email:     "admin@tavle.example.com",
+			Username:  "Tavle Admin",
+			Message:   "Welcome to room 'foyer'",
+			Room:      "foyer",
+			Timestamp: time.Now(),
+		}
+	*/
+	/*
+		res, err := ReadMessage(client2)
+		if err != nil {
+			t.Error(err)
+		}
+		result := new(Message)
+		if err = json.Unmarshal([]byte(res), &result); err != nil {
+			t.Error(err)
+		}
+		if expected0.Email != result.Email {
+			t.Errorf("Response is not valid '%s' <> '%s'", expected0.Email, result.Email)
+		}
+		if expected0.Username != result.Username {
+			t.Errorf("Response is not valid '%s' <> '%s'", expected0.Username, result.Username)
+		}
+		if expected0.Room != result.Room {
+			t.Errorf("Response is not valid '%s' <> '%s'", expected0.Room, result.Room)
+		}
+		if expected0.Message != result.Message {
+			t.Errorf("Response is not valid '%s' <> '%s'", expected0.Message, result.Message)
+		}
+	*/
+	// Send and receive
+
+	expected := Message{
+		Email:     "room1",
+		Username:  "John",
+		Message:   "my message",
+		Room:      "foyer",
+		Timestamp: time.Now(),
 	}
+	payload, err := json.Marshal(expected)
+	if err != nil {
+		t.Fatalf("Failed to create json payload. %v", err)
+	}
+
+	// Flush connection
+	for {
+		_, err := ReadMessage(client2)
+		if err != nil {
+			log.Print(err)
+			break
+		}
+	}
+
+	if err := WriteMessage(client2, string(payload)); err != nil {
+		t.Fatalf("Failed to send message. %v", err)
+	}
+	time.Sleep(1000)
 
 	res, err := ReadMessage(client2)
 	if err != nil {
@@ -89,50 +142,11 @@ func TestValidCase(t *testing.T) {
 	}
 	result := new(Message)
 	if err = json.Unmarshal([]byte(res), &result); err != nil {
+		log.Println(res) //###############
 		t.Error(err)
 	}
-	if expected0.Email != result.Email {
-		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Email, result.Email)
+	if expected != *result {
+		t.Errorf("Response is not valid '%s' <> '%s'", expected, *result)
 	}
-	if expected0.Username != result.Username {
-		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Username, result.Username)
-	}
-	if expected0.Room != result.Room {
-		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Room, result.Room)
-	}
-	if expected0.Message != result.Message {
-		t.Errorf("Response is not valid '%s' <> '%s'", expected0.Message, result.Message)
-	}
-	// Send and receive
-	/*
-		expected := Message{
-			Email:    "room1",
-			Username: "John",
-			Message:  "my message",
-			Room:     "foyer",
-		}
-		payload, err := json.Marshal(expected)
-		if err != nil {
-			t.Fatalf("Failed to create json payload. %v", err)
-		}
-		if err := WriteMessage(client1, string(payload)); err != nil {
-			t.Fatalf("Failed to send message. %v", err)
-		}
 
-		if err := WriteMessage(client2, `{"name":"room1"}`); err != nil {
-			t.Fatalf("Failed to send message. %v", err)
-		}
-
-		res, err = ReadMessage(client2)
-		if err != nil {
-			t.Error(err)
-		}
-		result = new(Message)
-		if err = json.Unmarshal([]byte(res), &result); err != nil {
-			t.Error(err)
-		}
-		if expected != *result {
-			t.Errorf("Response is not valid '%s' <> '%s'", expected, *result)
-		}
-	*/
 }

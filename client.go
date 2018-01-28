@@ -105,19 +105,6 @@ func (sub subscription) readPump() {
 			continue
 		}
 
-		//TODO Reload request: sub.conn.send
-		if m.Message == "RELOAD" {
-			adminMessage := Message{
-				Email:     "admin@tavle.example.com",
-				Username:  "Tavle Admin",
-				Message:   "Reloading",
-				Room:      m.Room,
-				Timestamp: time.Now(),
-			}
-			rawMessage, _ := json.Marshal(adminMessage)
-			sub.conn.send <- rawMessage
-		}
-
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
 	}
