@@ -57,13 +57,10 @@ func (h *Hub) run() {
 			roomname := sub.room
 			log.Printf("[DEBUG] hub register room '%s'", sub.room)
 			connections := h.rooms[roomname]
-			//connections := h.rooms[sub.room]
 			if connections == nil {
-				//log.Printf("[DEBUG] Create a new room '%s'", sub.room)
 				log.Printf("[DEBUG] Create a new room '%s'", roomname)
 				connections = make(map[*connection]bool)
 				h.rooms[roomname] = connections
-				//h.rooms[sub.room] = connections
 			}
 			connections[sub.conn] = true
 		case sub := <-h.unregister:
@@ -126,7 +123,6 @@ func (h *Hub) run() {
 var roomnameMatch = regexp.MustCompile(`^[\w\-\.]+$`)
 
 func sanitizeRoomname(roomname string) string {
-	log.Printf("[DEBUG] %s", roomname)
 	if roomnameMatch.Match([]byte(roomname)) {
 		log.Printf("[WARN] Use default roomname '%s' instead of '%s'.", DefaultRoomname, roomname)
 		return roomname

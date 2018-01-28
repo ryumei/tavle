@@ -12,12 +12,12 @@ func TestEncrypt(t *testing.T) {
 
 		encrypted, err := Encrypt(data, secret)
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("Encryption failed, %v", err)
 		}
 
 		decrypted, err := Decrypt(encrypted, secret)
 		if err != nil {
-			t.Fatalf("%v", err)
+			t.Fatalf("Decryption failed, %v", err)
 		}
 
 		if !bytes.Equal([]byte(data), decrypted) {

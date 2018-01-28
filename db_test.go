@@ -153,11 +153,11 @@ func TestReadPost(t *testing.T) {
 		secret,
 	)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Load post error %v", err)
 	}
 
 	if len(posts) < 1 {
-		t.Fatalf("No posts found")
+		t.Fatalf("No posts found.")
 	}
 
 }

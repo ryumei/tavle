@@ -75,12 +75,12 @@ func getDatabase(dataDir string, roomname string, permission os.FileMode) (*bolt
 func time2bytes(t time.Time) []byte {
 	b := make([]byte, 8)
 	ns := t.UTC().UnixNano()
-	binary.LittleEndian.PutUint64(b, uint64(ns))
+	binary.BigEndian.PutUint64(b, uint64(ns))
 	return b
 }
 
 func bytes2time(b []byte) time.Time {
-	ns := int64(binary.LittleEndian.Uint64(b))
+	ns := int64(binary.BigEndian.Uint64(b))
 	return time.Unix(0, ns)
 }
 
@@ -89,10 +89,8 @@ func dbKeySHA1(t time.Time, user string) []byte {
 	for _, c := range time2bytes(t) {
 		k = append(k, c)
 	}
-	if len(user) > 0 {
-		for _, c := range sha1.Sum([]byte(user)) {
-			k = append(k, c)
-		}
+	for _, c := range sha1.Sum([]byte(user)) {
+		k = append(k, c)
 	}
 	return k
 }
@@ -103,11 +101,16 @@ func dbBoundKeySHA1(t time.Time) []byte {
 	for _, c := range time2bytes(t) {
 		k = append(k, c)
 	}
+	// pad trailing zeros
+	for i := sha1.Size; i > 0; i-- {
+		k = append(k, 0)
+	}
+
 	return k
 }
 
 // SavePost メッセージを DB に保管します。
-func SavePost(m Message, dataDir string, secret []byte) {
+func SavePost(m Message, dataDir string, secret []byte) error {
 	db, err := GetWritableDB(dataDir, m.Room)
 	if err != nil {
 		log.Fatal(err)
@@ -120,7 +123,6 @@ func SavePost(m Message, dataDir string, secret []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//TODO encryption
 	encrypted, err := Encrypt(jsonBytes, secret)
 	if err != nil {
 		log.Fatal(err)
@@ -137,6 +139,8 @@ func SavePost(m Message, dataDir string, secret []byte) {
 		}
 		return nil
 	})
+
+	return nil
 }
 
 func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, secret []byte) ([]Message, error) {
@@ -154,13 +158,11 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, s
 	max := dbBoundKeySHA1(latest.Add(1 + time.Nanosecond))
 
 	aDay := 24 * time.Hour
-	// latest -- cursor
 
 	var messages []Message
 	for cursor := earliest; latest.Sub(cursor)+aDay > 0; cursor = cursor.AddDate(0, 0, 1) {
 
 		bucketName := cursor.UTC().Format(BucketFormat)
-		//var messages []Message
 		db.View(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket([]byte(bucketName))
 			if bucket == nil {
@@ -169,10 +171,10 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, s
 
 			c := bucket.Cursor()
 			for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) < 0; k, v = c.Next() {
-				//TODO decryption
+
 				decrypted, err := Decrypt(v, secret)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalf("Decryption error: %v ", err)
 				}
 				var msg Message
 				if err := json.Unmarshal(decrypted, &msg); err != nil {
@@ -180,17 +182,10 @@ func LoadPosts(room string, latest time.Time, durationSec int, dataDir string, s
 					continue
 				}
 				messages = append(messages, msg)
-
-				//TODO json marsharing for v
-				fmt.Printf("[DEBUG] %s: %s\n", k, decrypted)
 			}
 
 			return nil
 		})
-		log.Printf("[DEBUG] bye")
 	}
-
-	log.Printf("[DEBUG] Loop exited %v\n ", earliest)
-
 	return messages, nil
 }
