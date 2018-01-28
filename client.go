@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -188,7 +187,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go sub.writePump()
 	go sub.readPump()
 
-	log.Printf("[DEBUG] Trying to load latest messages")
+	log.Printf("[DEBUG] Loading latest messages")
 	messages, err := LoadPosts(room,
 		time.Now(), 86400,
 		conf.Server.DataDir,
@@ -196,25 +195,29 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[ERROR] failed to load recent messages %v", err)
 	} else {
-		for msg := range messages {
+		log.Printf("[DEBUG] %s", messages)
+		for _, msg := range messages {
+			log.Printf("[DEBUG] %s", msg)
 			rawMessage, err := json.Marshal(msg)
 			if err != nil {
-				log.Printf("[WARN] failed unmarshaling %v", err)
+				log.Printf("[WARN] Failed to unmarshaling%v", err)
+				continue
 			}
 			sub.conn.send <- rawMessage
 		}
 	}
-
-	welcomMessage := Message{
-		Email:     "admin@tavle.example.com",
-		Username:  "Tavle Admin",
-		Message:   fmt.Sprintf("Welcome to room '%s'", room),
-		Room:      room,
-		Timestamp: time.Now(),
-	}
-	rawMessage, err := json.Marshal(welcomMessage)
-	if err != nil {
-		log.Printf("[WARN] failed unmarshaling %v", err)
-	}
-	sub.conn.send <- rawMessage
+	/*
+		welcomMessage := Message{
+			Email:     "admin@tavle.example.com",
+			Username:  "Tavle Admin",
+			Message:   fmt.Sprintf("Welcome to room '%s'", room),
+			Room:      room,
+			Timestamp: time.Now(),
+		}
+		rawMessage, err := json.Marshal(welcomMessage)
+		if err != nil {
+			log.Printf("[WARN] failed unmarshaling %v", err)
+		}
+		sub.conn.send <- rawMessage
+	*/
 }
