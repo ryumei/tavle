@@ -188,6 +188,23 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go sub.writePump()
 	go sub.readPump()
 
+	log.Printf("[DEBUG] Trying to load latest messages")
+	messages, err := LoadPosts(room,
+		time.Now(), 86400,
+		conf.Server.DataDir,
+		[]byte(conf.Server.Secret))
+	if err != nil {
+		log.Printf("[ERROR] failed to load recent messages %v", err)
+	} else {
+		for msg := range messages {
+			rawMessage, err := json.Marshal(msg)
+			if err != nil {
+				log.Printf("[WARN] failed unmarshaling %v", err)
+			}
+			sub.conn.send <- rawMessage
+		}
+	}
+
 	welcomMessage := Message{
 		Email:     "admin@tavle.example.com",
 		Username:  "Tavle Admin",

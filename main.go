@@ -119,6 +119,7 @@ func main() {
 	defer listener.Close()
 
 	secret := []byte(conf.Server.Secret)
+	// TODO Check length of secret
 
 	exitCh := make(chan int)
 	go func() {

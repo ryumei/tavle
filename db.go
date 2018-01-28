@@ -40,11 +40,11 @@ var BucketFormat = "2006.01.02"
  */
 
 func GetReadOnlyDB(dataDir string, roomname string) (*bolt.DB, error) {
-	return getDatabase(dataDir, roomname, 0400)
+	return getDatabase(dataDir, roomname, 0644)
 }
 
 func GetWritableDB(dataDir string, roomname string) (*bolt.DB, error) {
-	return getDatabase(dataDir, roomname, 0600)
+	return getDatabase(dataDir, roomname, 0644)
 }
 
 /*
