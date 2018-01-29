@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -93,7 +92,7 @@ func (sub subscription) readPump() {
 	log.Printf("[DEBUG] readPump initiated")
 	for {
 		_, rawMessage, err := conn.ws.ReadMessage()
-		log.Printf("[DEBUG] readPump loop, %s", rawMessage) // "send" called
+		log.Printf("[DEBUG] readPump loop, '%s'", rawMessage) // "send" called
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("[ERROR] %v", err)
@@ -102,9 +101,10 @@ func (sub subscription) readPump() {
 		}
 		m, err := sanitizedMessage(rawMessage)
 		if err != nil {
-			log.Printf("[WARN] %v", err)
+			log.Printf("[WARN] Failed sanitizzation, %v", err)
 			continue
 		}
+
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
 	}
@@ -174,15 +174,37 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go sub.writePump()
 	go sub.readPump()
 
-	welcomMessage := Message{
-		Email:    "admin@tavle.example.com",
-		Username: "Tavle Admin",
-		Message:  fmt.Sprintf("Welcome to room '%s'", room),
-		Room:     room,
-	}
-	rawMessage, err := json.Marshal(welcomMessage)
+	log.Printf("[DEBUG] Loading latest messages")
+	messages, err := LoadPosts(room,
+		time.Now(), 86400,
+		conf.Server.DataDir,
+		[]byte(conf.Server.Secret))
 	if err != nil {
-		log.Printf("[WARN] failed unmarshaling %v", err)
+		log.Printf("[ERROR] failed to load recent messages %v", err)
+	} else {
+		//log.Printf("[DEBUG] %s", messages)
+		for _, msg := range messages {
+			//log.Printf("[DEBUG] %s", msg)
+			rawMessage, err := json.Marshal(msg)
+			if err != nil {
+				log.Printf("[WARN] Failed to unmarshaling %v", err)
+				continue
+			}
+			sub.conn.send <- rawMessage
+		}
 	}
-	sub.conn.send <- rawMessage
+	/*
+		welcomMessage := Message{
+			Email:     "admin@tavle.example.com",
+			Username:  "Tavle Admin",
+			Message:   fmt.Sprintf("Welcome to room '%s'", room),
+			Room:      room,
+			Timestamp: time.Now(),
+		}
+		rawMessage, err := json.Marshal(welcomMessage)
+		if err != nil {
+			log.Printf("[WARN] failed unmarshaling %v", err)
+		}
+		sub.conn.send <- rawMessage
+	*/
 }

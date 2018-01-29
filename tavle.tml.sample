@@ -18,6 +18,8 @@ CertFile = ""
 KeyFile = ""
 # DataDir チャット履歴の保管ディレクトリ
 DataDir = "chatlog"
+# Secret 暗号化キー。16 文字。
+Secret = "CHANGEME"
 
 [Log]
 # AccessLog クライアントからのアクセスログ

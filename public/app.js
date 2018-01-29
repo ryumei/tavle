@@ -1,6 +1,14 @@
 Vue.config.devtools = true
 Vue.use(VueSessionStorage)
 
+Vue.filter('formatDatetime', function(value) {
+    if (value) {
+        ts = moment(String(value));
+        return ts.format('MM/DD hh:mm a')
+    }
+})
+
+
 // Initialize WebSocket connection
 var connectWs = function(vueBase) {
     var self = vueBase;
@@ -11,14 +19,22 @@ var connectWs = function(vueBase) {
     vueBase.ws.addEventListener('message', function(e) {
         console.log('[DEBUG] Receive data from the server: ' + e.data);
         
-        //NOTE: Received data have been sanitized on the serverside
+        //NOTE: Received data have been sanitized on the server side
         var msg = JSON.parse(e.data);
         var message = emojione.toImage(msg.message.replace(/\r?\n/g, '<br/>'));
 
+        /*
+         * TODO: Switching option reloading or updating
+         * e.data で array を受け付ける。
+         * List なら、reload として前に付ける。
+         * Item なら、new post として後に付ける。
+         */
+        
         self.talkTimeline.push({
             avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
             username: msg.username,
-            message: message
+            message: message,
+            timestamp: msg.timestamp
         });
 
         //TODO: notify new messages have arrived
@@ -40,7 +56,7 @@ var escapeNewline = function(str) {
 Vue.component('timeline', {
     props: ['msg'],
     template: '<div class="post">' + 
-        '<div class="chip"><span v-html="msg.avatarImg"></span> {{msg.username}}</div> ' +
+        '<div class="chip"><span v-html="msg.avatarImg"></span> {{msg.username}} <span class="timestamp">({{ msg.timestamp | formatDatetime }})</span></div> ' +
         '<span v-html="msg.message"></span></div>',
 })
 

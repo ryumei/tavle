@@ -18,3 +18,8 @@ main {
 #message {
     height: 1rem;
 }
+
+timestamp {
+    font-size: x-small;
+    color: #999;
+}
