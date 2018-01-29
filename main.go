@@ -101,14 +101,17 @@ func connectionStateChange(c net.Conn, st http.ConnState) {
 }
 
 func loadSecret() []byte {
+	keyLength := 16
+
 	given := conf.Server.Secret
-	if len(given) >= 16 {
-		return []byte(given[0:15])
+	if len(given) >= keyLength {
+		return []byte(given[0:keyLength])
 	}
 	secret := []byte(given)
-	for i := len(secret); i < 16; i++ {
+	for i := len(secret); i < keyLength; i++ {
 		secret = append(secret, '=')
 	}
+	log.Println(len(secret))
 	return secret
 }
 
