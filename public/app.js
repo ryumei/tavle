@@ -13,7 +13,7 @@ Vue.filter('formatDatetime', function(value) {
 var connectWs = function(vueBase) {
     var self = vueBase;
 
-    protocol = (this.location.protocol == 'httstrptimeps:') ? 'wss:' : 'ws:'; 
+    protocol = (this.location.protocol == 'https:') ? 'wss:' : 'ws:'; 
     vueBase.ws = new WebSocket(protocol + '//' + window.location.host + '/ws/' + vueBase.room);
     
     vueBase.ws.addEventListener('message', function(e) {

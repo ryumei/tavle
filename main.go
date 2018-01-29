@@ -100,6 +100,18 @@ func connectionStateChange(c net.Conn, st http.ConnState) {
 	log.Printf("[INFO] %d active connections.\n", numberOfActive)
 }
 
+func loadSecret() []byte {
+	given := conf.Server.Secret
+	if len(given) >= 16 {
+		return []byte(given[0:15])
+	}
+	secret := []byte(given)
+	for i := len(secret); i < 16; i++ {
+		secret = append(secret, '=')
+	}
+	return secret
+}
+
 func main() {
 	// Channel to catch signals
 	sigCh := make(chan os.Signal, 1)
@@ -118,8 +130,8 @@ func main() {
 	}
 	defer listener.Close()
 
-	secret := []byte(conf.Server.Secret)
-	// TODO Check length of secret
+	// 16 bytes secret key
+	secret := loadSecret()
 
 	exitCh := make(chan int)
 	go func() {
@@ -155,9 +167,7 @@ func main() {
 					fmt.Println("writer channel is closed")
 					break loop
 				}
-
-				dectateCSV(msg, dataDirPath)
-				SavePost(msg, dataDirPath, secret) //
+				SavePost(msg, dataDirPath, secret)
 			}
 		}
 	}()
@@ -166,7 +176,6 @@ func main() {
 	router := registHandlers(conf.Log.AccessLog)
 	server := &http.Server{Handler: router, ConnState: connectionStateChange}
 
-	//TODO
 	if conf.Server.EnableTLS {
 		certFilePath, _ := filepath.Abs(conf.Server.CertFile)
 		keyFilePath, _ := filepath.Abs(conf.Server.KeyFile)

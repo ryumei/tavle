@@ -92,7 +92,7 @@ func (sub subscription) readPump() {
 	log.Printf("[DEBUG] readPump initiated")
 	for {
 		_, rawMessage, err := conn.ws.ReadMessage()
-		log.Printf("[DEBUG] readPump loop, %s", rawMessage) // "send" called
+		log.Printf("[DEBUG] readPump loop, '%s'", rawMessage) // "send" called
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("[ERROR] %v", err)
@@ -101,7 +101,7 @@ func (sub subscription) readPump() {
 		}
 		m, err := sanitizedMessage(rawMessage)
 		if err != nil {
-			log.Printf("[WARN] %v", err)
+			log.Printf("[WARN] Failed sanitizzation, %v", err)
 			continue
 		}
 
@@ -182,12 +182,12 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("[ERROR] failed to load recent messages %v", err)
 	} else {
-		log.Printf("[DEBUG] %s", messages)
+		//log.Printf("[DEBUG] %s", messages)
 		for _, msg := range messages {
-			log.Printf("[DEBUG] %s", msg)
+			//log.Printf("[DEBUG] %s", msg)
 			rawMessage, err := json.Marshal(msg)
 			if err != nil {
-				log.Printf("[WARN] Failed to unmarshaling%v", err)
+				log.Printf("[WARN] Failed to unmarshaling %v", err)
 				continue
 			}
 			sub.conn.send <- rawMessage
