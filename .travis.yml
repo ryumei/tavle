@@ -15,7 +15,8 @@ before_script:
 script:
   - make dist
 after_success:
-  - if [ "x$TRAVIS_BRANCH" == "xmaster" -a "x$TRAVIS_TAG" != "x" ]; then
+  - if [ "x$TRAVIS_BRANCH" == "xmaster" -a "x$TRAVIS_TAG" != "x" ] \
+    || [ "x$TRAVIS_TAG" != "x" -a "x$TRAVIS_TAG" == "x$TRAVIS_BRANCH" ]; then
     docker build -t $DOCKER_REPO .;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push $DOCKER_REPO;

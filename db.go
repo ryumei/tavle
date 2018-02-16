@@ -113,7 +113,8 @@ func dbBoundKeySHA1(t time.Time) []byte {
 func SavePost(m Message, dataDir string, secret []byte) error {
 	db, err := GetWritableDB(dataDir, m.Room)
 	if err != nil {
-		log.Fatal(err)
+		log.Print("[ERROR] Failed to open the DB", err)
+		return nil
 	}
 	defer db.Close()
 
@@ -121,21 +122,25 @@ func SavePost(m Message, dataDir string, secret []byte) error {
 	key := dbKeySHA1(m.Timestamp, m.Username)
 	jsonBytes, err := json.Marshal(m)
 	if err != nil {
-		log.Fatal(err)
+		log.Print("[ERROR] Failed to JSONize", err)
+		return nil
 	}
 	encrypted, err := Encrypt(jsonBytes, secret)
 	if err != nil {
-		log.Fatal(err)
+		log.Print("[ERROR] Failed to encrypt a message", err)
+		return nil
 	}
 
 	db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucketName))
 		if err != nil {
-			log.Fatal(err)
+			log.Print("[ERROR] Failed to get the bucket", err)
+			return nil
 		}
 		err = bucket.Put(key, encrypted)
 		if err != nil {
-			log.Fatal(err)
+			log.Print("[ERROR] Failed to save a message", err)
+			return nil
 		}
 		return nil
 	})
