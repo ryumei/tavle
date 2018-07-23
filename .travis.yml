@@ -1,13 +1,15 @@
 sudo: required
 language: go
 go:
-  - 1.9
+  - "1.9"
+  - master
 env:
   - DOCKER_REPO=ryumei/tavle
 services:
   - docker
 install:
   - go get -u github.com/golang/lint/golint
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - make deps
   - cp tavle.tml.sample tavle.tml
 before_script:
