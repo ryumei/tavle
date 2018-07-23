@@ -1,6 +1,7 @@
 *.tml
 *.pem
 glide.lock
+Gopkg.lock
 
 bin/
 vendor/

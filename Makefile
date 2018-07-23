@@ -9,7 +9,7 @@ REVISION := $(shell git rev-parse --short HEAD)
 SRCS    := $(shell find . -type f -name '*.go')
 LDFLAGS := -ldflags="-s -w -X \"main.Version=$(VERSION)\" -X \"main.Revision=$(REVISION)\" -extldflags \"-static\""
 
-SUBPKGS := $(shell glide novendor)
+SUBPKGS := $(shell go list ./...)
 
 .PHONY: all 
 all: test bin/$(NAME)
@@ -24,10 +24,10 @@ clean:
 
 .PHONY: test testv bench
 test: deps golint
-	go test $(SUBPKGS)
+	go test ./...
 
 testv: test
-	go test -v $(SUBPKGS)
+	go test -v ./...
 
 bench: test
 	go test -bench . ./... -benchmem
@@ -71,15 +71,9 @@ dist: cross-build
 	$(DIST_DIRS) zip -r $(NAME)-$(VERSION)-{}.zip {} \;  && \
 	cd ..
 
-.PHONY: glide
-glide:
-ifeq ($(shell command -v glide 2>/dev/null),)
-	curl https://glide.sh/get | sh
-endif
-
 .PHONY: deps
-deps: glide
-	glide update
+deps:
+	dep ensure -v -update
 
 .PHONY: dist-src
 dist-src:
