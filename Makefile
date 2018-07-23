@@ -73,7 +73,7 @@ dist: cross-build
 
 .PHONY: deps
 deps:
-	dep ensure -v -update
+	dep ensure -v
 
 .PHONY: dist-src
 dist-src:
