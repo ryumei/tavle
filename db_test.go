@@ -132,7 +132,7 @@ func TestGetDatabase(t *testing.T) {
 
 func TestReadPost(t *testing.T) {
 	var roomname = "testroom"
-	var dataDir = "test"
+	var dataDir = "test/data"
 	var secret = []byte("CHANGEME_16CHARS") // AWS restriction
 
 	msg := Message{
