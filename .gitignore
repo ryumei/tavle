@@ -3,6 +3,8 @@
 glide.lock
 Gopkg.lock
 
+test/data/testroom.db
+
 bin/
 vendor/
 dist/

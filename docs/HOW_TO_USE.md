@@ -64,5 +64,5 @@ tavle.tml が同じディレクトリにある場合には、``-c`` オプショ
 設定ファイルの ``[Server]`` の ``EnableTLS`` を ``true`` にし、
 ``CertFile`` と ``KeyFile`` にサーバ証明書、鍵ファイルのパスを指定してください。
 
-OpenSSL で作るサンプルを、ソース版の ``contrib/create_certs.sh`` に置いてあります。
+OpenSSL で作るサンプルを、ソース版の ``scripts/create_certs.sh`` に置いてあります。
 
