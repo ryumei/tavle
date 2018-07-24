@@ -13,7 +13,7 @@ It is an example implementation of online chat system using WebSocket.
 Websocket を使ったチャットの実装例です。
 このプロジェクトは、コミュニティ [eLV](http://www.elv.tokyo/) の活動を通じて生まれました。
 
-とりあえず動かしてみたい方は [How to Use](doc/HOW_TO_USE.md) をご覧ください。
+とりあえず動かしてみたい方は [How to Use](docs/HOW_TO_USE.md) をご覧ください。
 
 ## 必要なもの Requirement
 
@@ -23,7 +23,7 @@ Websocket を使ったチャットの実装例です。
 ## 使い方 Usage
 
 設定ファイルを配置し、実行します。
-詳しくは [How to Use](doc/HOW_TO_USE.md) をご覧ください。
+詳しくは [How to Use](docs/HOW_TO_USE.md) をご覧ください。
 
 ## インストール方法 Install
 

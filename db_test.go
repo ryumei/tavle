@@ -120,7 +120,7 @@ func BenchmarkDBKeySHA256(b *testing.B) {
 }
 
 func TestGetDatabase(t *testing.T) {
-	dataDir := "test"
+	dataDir := "test/data"
 	roomname := "testroom"
 
 	db, err := GetWritableDB(dataDir, roomname)
