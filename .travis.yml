@@ -1,8 +1,7 @@
 sudo: required
 language: go
 go:
-  - "1.9"
-  - master
+  - "1.10.x"
 env:
   - DOCKER_REPO=ryumei/tavle
 services:
