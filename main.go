@@ -72,10 +72,9 @@ func registHandlers(logPath string) http.Handler {
 }
 
 var conf config
+var confPath string
 
-func init() {
-	var confPath string
-	flag.StringVar(&confPath, "c", "tavle.tml", "Path to config file")
+func loadConfig() {
 	flag.Parse()
 
 	if _, err := toml.DecodeFile(confPath, &conf); err != nil {
@@ -84,6 +83,10 @@ func init() {
 	}
 
 	ConfigLogging(conf.Log)
+}
+
+func init() {
+	flag.StringVar(&confPath, "c", "tavle.tml", "Path to config file")
 }
 
 var activeConnWaiting sync.WaitGroup
@@ -116,6 +119,8 @@ func loadSecret() []byte {
 }
 
 func main() {
+	loadConfig()
+
 	// Channel to catch signals
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

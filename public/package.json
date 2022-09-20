@@ -1,0 +1,12 @@
+{
+  "name": "tavle-server",
+  "version": "1.0.0",
+  "main": "app.js",
+  "license": "MIT",
+  "dependencies": {
+    "identicon": "^3.1.1",
+    "initial-js": "^0.3.4",
+    "moment": "^2.29.4",
+    "node-pnglib": "^1.5.5"
+  }
+}
