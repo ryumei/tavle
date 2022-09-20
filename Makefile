@@ -34,9 +34,7 @@ bench: test
 
 .PHONY: golint
 golint:
-	@for d in $(SUBPKGS); do \
-	  golint $$d;\
-	done
+	go vet
 
 coverage.out: test
 	echo 'mode: atomic' > $@ && \
@@ -73,7 +71,7 @@ dist: cross-build
 
 .PHONY: deps
 deps:
-	dep ensure -v
+	go mod tidy
 
 .PHONY: dist-src
 dist-src:
