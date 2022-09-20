@@ -2,9 +2,8 @@ Vue.config.devtools = true
 Vue.use(VueSessionStorage)
 
 Vue.filter('formatDatetime', function(value) {
-    if (value) {
-        ts = moment(String(value));
-        return ts.format('MM/DD hh:mm a')
+    if (value) {       
+        return value
     }
 })
 
