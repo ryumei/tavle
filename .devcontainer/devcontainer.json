@@ -1,0 +1,23 @@
+{
+  "name": "Ubuntu + Claude Code (Pro/Max plan)",
+  "image": "devcontainer-local",
+
+  // ── ~/.claude をホストと共有（認証情報・設定を永続化）
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
+
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
