@@ -104,6 +104,8 @@ func (sub subscription) readPump() {
 			log.Printf("[WARN] Failed sanitizzation, %v", err)
 			continue
 		}
+		// Do not trust the room in the message; use the room of the connection
+		m.Room = sub.room
 
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
