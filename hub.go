@@ -17,6 +17,12 @@ type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// membersMessage notifies the number of connections in a room
+type membersMessage struct {
+	Type  string `json:"type"`
+	Count int    `json:"count"`
+}
+
 // subscription is connection and joined room
 type subscription struct {
 	conn *connection
@@ -63,6 +69,7 @@ func (h *Hub) run() {
 				h.rooms[roomname] = connections
 			}
 			connections[sub.conn] = true
+			h.notifyMembers(roomname)
 		case sub := <-h.unregister:
 			log.Printf("[DEBUG] hub unregister")
 			connections := h.rooms[sub.room]
@@ -73,6 +80,7 @@ func (h *Hub) run() {
 					if len(connections) == 0 { // Close a room
 						delete(h.rooms, sub.room)
 					}
+					h.notifyMembers(sub.room)
 				}
 			}
 		case msg := <-h.broadcast:
@@ -100,6 +108,7 @@ func (h *Hub) run() {
 				writer <- admMsg
 			}
 
+			removed := false
 			for c := range connections {
 				select {
 				case c.send <- rawMessage:
@@ -111,11 +120,32 @@ func (h *Hub) run() {
 					log.Printf("[DEBUG] hub default close connection")
 					close(c.send)
 					delete(connections, c)
+					removed = true
 					if len(connections) == 0 { // Close a room
 						delete(h.rooms, msg.Room)
 					}
 				}
 			}
+			if removed {
+				h.notifyMembers(msg.Room)
+			}
+		}
+	}
+}
+
+// notifyMembers sends the number of connections to all connections in the room
+func (h *Hub) notifyMembers(roomname string) {
+	connections := h.rooms[roomname]
+	rawMessage, err := json.Marshal(membersMessage{Type: "members", Count: len(connections)})
+	if err != nil {
+		log.Printf("[ERROR] Failed to marshaling a members message %v", err)
+		return
+	}
+	for c := range connections {
+		select {
+		case c.send <- rawMessage:
+		default:
+			log.Printf("[DEBUG] hub skip members message to a busy connection")
 		}
 	}
 }

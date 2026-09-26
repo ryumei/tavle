@@ -22,6 +22,9 @@
     <main id="app" class="flow-text">
         <div class="row" v-if="joined">
             <div class="col s12">
+                <div class="members" v-if="memberCount != null">
+                    <i class="material-icons tiny">people</i> {{ memberCount }} online
+                </div>
                 <div class="card horizontal">
                     <div id="chat-messages" class="card-content">
                         <timeline v-for="post in talkTimeline" v-bind:msg="post"></timeline>
