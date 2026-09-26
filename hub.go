@@ -154,8 +154,8 @@ var roomnameMatch = regexp.MustCompile(`^[\w\-\.]+$`)
 
 func sanitizeRoomname(roomname string) string {
 	if roomnameMatch.Match([]byte(roomname)) {
-		log.Printf("[WARN] Use default roomname '%s' instead of '%s'.", DefaultRoomname, roomname)
 		return roomname
 	}
+	log.Printf("[WARN] Use default roomname '%s' instead of '%s'.", DefaultRoomname, roomname)
 	return DefaultRoomname
 }
