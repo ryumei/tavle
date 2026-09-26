@@ -27,7 +27,7 @@
                 </div>
                 <div class="card horizontal">
                     <div id="chat-messages" class="card-content">
-                        <timeline v-for="post in talkTimeline" v-bind:msg="post"></timeline>
+                        <timeline v-for="post in talkTimeline" v-bind:msg="post" v-on:cancel="cancel"></timeline>
                     </div>
                 </div>
             </div>

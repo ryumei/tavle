@@ -24,6 +24,16 @@ var connectWs = function(vueBase) {
             self.memberCount = msg.count;
             return;
         }
+        if (msg.type == 'delete') {
+            self.talkTimeline = self.talkTimeline.filter(function(post) {
+                return post.id != msg.id;
+            });
+            self.forgetDeleteToken(msg.id);
+            return;
+        }
+        if (msg.deleteToken) {
+            self.saveDeleteToken(msg.id, msg.deleteToken);
+        }
         var message = emojione.toImage(msg.message.replace(/\r?\n/g, '<br/>'));
 
         /*
@@ -43,7 +53,9 @@ var connectWs = function(vueBase) {
             avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
             username: msg.username,
             message: message,
-            timestamp: msg.timestamp
+            timestamp: msg.timestamp,
+            id: msg.id,
+            cancelable: msg.id != null && self.deleteTokens[msg.id] != null
         });
 
         //TODO: notify new messages have arrived
@@ -70,6 +82,7 @@ Vue.component('timeline', {
     props: ['msg'],
     template: '<div class="post">' + 
         '<div class="chip"><span v-html="msg.avatarImg"></span> {{msg.username}} <span class="timestamp">({{ msg.timestamp | formatDatetime }})</span></div> ' +
+        '<a v-if="msg.cancelable" class="cancel" href="#" title="Delete" @click.prevent="$emit(\'cancel\', msg.id)"><i class="material-icons tiny">delete</i></a> ' +
         '<span v-html="msg.message"></span></div>',
 })
 
@@ -84,7 +97,8 @@ new Vue({
         username: null, // Our username
         room: null, // Unique room name
         joined: false, // True if email or username have been filled in
-        memberCount: null // Number of connections in the room
+        memberCount: null, // Number of connections in the room
+        deleteTokens: {} // Tokens to delete own messages, keyed by message id
     },
     components: {
     },
@@ -95,6 +109,7 @@ new Vue({
                 this.email = stub['email'];
                 this.username = stub['username'];
                 this.room = stub['room'];
+                this.deleteTokens = JSON.parse(this.$session.get("deleteTokens") || "{}");
                 this.joined = true;
                 connectWs(this);
                 
@@ -109,6 +124,24 @@ new Vue({
         }
     },
     methods: {
+        saveDeleteToken: function(id, token) {
+            this.deleteTokens[id] = token;
+            this.$session.set("deleteTokens", JSON.stringify(this.deleteTokens));
+        },
+        forgetDeleteToken: function(id) {
+            delete this.deleteTokens[id];
+            this.$session.set("deleteTokens", JSON.stringify(this.deleteTokens));
+        },
+        cancel: function(id) {
+            if (!confirm('Delete this message?')) {
+                return;
+            }
+            this.ws.send(JSON.stringify({
+                type: 'delete',
+                id: id,
+                deleteToken: this.deleteTokens[id]
+            }));
+        },
         send: function (event) {
             if (event.shiftKey) {
                 return;

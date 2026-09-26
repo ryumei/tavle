@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"regexp"
@@ -15,6 +18,34 @@ type Message struct {
 	Message   string    `json:"message"`
 	Room      string    `json:"room"`
 	Timestamp time.Time `json:"timestamp"`
+
+	// Type is "delete" for a request to delete a message
+	Type string `json:"type,omitempty"`
+	// ID identifies a message
+	ID string `json:"id,omitempty"`
+	// DeleteToken is required to delete a message. It is given only to the sender.
+	DeleteToken string `json:"deleteToken,omitempty"`
+
+	// sender is the connection which sent the message
+	sender *connection
+}
+
+// deleteMessage notifies a message is deleted
+type deleteMessage struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
+}
+
+// deleteToken returns the token to delete the message in the room
+func deleteToken(room string, id string, secret []byte) string {
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(room + "/" + id))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// validDeleteToken reports whether the token is valid to delete the message
+func validDeleteToken(room string, id string, token string, secret []byte) bool {
+	return hmac.Equal([]byte(token), []byte(deleteToken(room, id, secret)))
 }
 
 // membersMessage notifies the number of connections in a room
@@ -84,7 +115,12 @@ func (h *Hub) run() {
 				}
 			}
 		case msg := <-h.broadcast:
+			if msg.Type == "delete" {
+				h.deletePost(msg)
+				continue
+			}
 			msg.Timestamp = time.Now()
+			msg.ID = messageID(msg.Timestamp, msg.Username)
 			log.Printf("[DEBUG] hub boradcast to room:%s", msg.Room) // called from readPump
 			connections := h.rooms[msg.Room]
 			log.Printf("[DEBUG] # of connections %d", len(connections))
@@ -92,6 +128,13 @@ func (h *Hub) run() {
 			rawMessage, err := json.Marshal(msg)
 			if err != nil {
 				log.Printf("[ERROR] Failed to marshaling a message '%v'", msg)
+			}
+			// Only the sender gets the token to delete the message
+			own := msg
+			own.DeleteToken = deleteToken(msg.Room, msg.ID, dbSecret)
+			rawOwnMessage, err := json.Marshal(own)
+			if err != nil {
+				log.Printf("[ERROR] Failed to marshaling a message '%v'", own)
 			}
 			writer <- msg
 
@@ -110,8 +153,12 @@ func (h *Hub) run() {
 
 			removed := false
 			for c := range connections {
+				raw := rawMessage
+				if c == msg.sender {
+					raw = rawOwnMessage
+				}
 				select {
-				case c.send <- rawMessage:
+				case c.send <- raw:
 					log.Printf("[DEBUG] hub send [%s]: %s", msg.Room, msg.Message)
 					if len(rawAdminMessage) > 0 {
 						c.send <- rawAdminMessage
@@ -135,17 +182,32 @@ func (h *Hub) run() {
 
 // notifyMembers sends the number of connections to all connections in the room
 func (h *Hub) notifyMembers(roomname string) {
-	connections := h.rooms[roomname]
-	rawMessage, err := json.Marshal(membersMessage{Type: "members", Count: len(connections)})
+	rawMessage, err := json.Marshal(membersMessage{Type: "members", Count: len(h.rooms[roomname])})
 	if err != nil {
 		log.Printf("[ERROR] Failed to marshaling a members message %v", err)
 		return
 	}
-	for c := range connections {
+	h.notify(roomname, rawMessage)
+}
+
+// deletePost deletes the message and notifies it to all connections in the room
+func (h *Hub) deletePost(msg Message) {
+	rawMessage, err := json.Marshal(deleteMessage{Type: "delete", ID: msg.ID})
+	if err != nil {
+		log.Printf("[ERROR] Failed to marshaling a delete message %v", err)
+		return
+	}
+	writer <- msg
+	h.notify(msg.Room, rawMessage)
+}
+
+// notify sends the message to all connections in the room without blocking
+func (h *Hub) notify(roomname string, rawMessage []byte) {
+	for c := range h.rooms[roomname] {
 		select {
 		case c.send <- rawMessage:
 		default:
-			log.Printf("[DEBUG] hub skip members message to a busy connection")
+			log.Printf("[DEBUG] hub skip a notification to a busy connection")
 		}
 	}
 }
