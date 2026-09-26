@@ -48,8 +48,8 @@ type serverConfig struct {
 }
 
 // Global variables are usually a bad practice but we will use them this time for simplicity.
-//var clients = make(map[*websocket.Conn]bool) // connected clients
-//var broadcast = make(chan Message) // broadcast channel
+// var clients = make(map[*websocket.Conn]bool) // connected clients
+// var broadcast = make(chan Message) // broadcast channel
 var writer = make(chan Message) // exporter channels
 
 // registHandlers maps URL paths to handler functions
