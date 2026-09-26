@@ -20,6 +20,10 @@ var connectWs = function(vueBase) {
         
         //NOTE: Received data have been sanitized on the server side
         var msg = JSON.parse(e.data);
+        if (msg.type == 'members') {
+            self.memberCount = msg.count;
+            return;
+        }
         var message = emojione.toImage(msg.message.replace(/\r?\n/g, '<br/>'));
 
         /*
@@ -79,7 +83,8 @@ new Vue({
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
         room: null, // Unique room name
-        joined: false // True if email or username have been filled in
+        joined: false, // True if email or username have been filled in
+        memberCount: null // Number of connections in the room
     },
     components: {
     },
