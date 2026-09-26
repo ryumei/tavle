@@ -139,21 +139,31 @@ func TestDeleteMessage(t *testing.T) {
 	}
 }
 
+// notifyRoomPosted is true after the first post to "notifyroom" in this process.
+// The hub keeps the last post time across tests.
+var notifyRoomPosted bool
+
 func TestNotifySlack(t *testing.T) {
 	server := startTestServer(t)
-	for _, room := range []string{"quietroom", "notifyroom"} {
+	for _, room := range []string{"quietroom", "notifyroom", "notifyroom"} {
 		ws := dialRoom(t, server, room)
 		post, _ := json.Marshal(Message{Username: "user", Message: "secret text"})
 		ws.WriteMessage(websocket.TextMessage, post)
+		// Wait for the post to be delivered to keep the order
+		receive(t, ws, func(m Message) bool { return m.Message == "secret text" })
 	}
 
-	select {
-	case body := <-slackRequests:
-		if !strings.Contains(body, "notifyroom") || strings.Contains(body, "secret text") {
-			t.Fatalf("[ERROR] unexpected notification %s", body)
+	// Only the first post to "notifyroom" is notified since the second one is soon after it
+	if !notifyRoomPosted {
+		notifyRoomPosted = true
+		select {
+		case body := <-slackRequests:
+			if !strings.Contains(body, "notifyroom") || strings.Contains(body, "secret text") {
+				t.Fatalf("[ERROR] unexpected notification %s", body)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("[ERROR] notification not received")
 		}
-	case <-time.After(time.Second):
-		t.Fatal("[ERROR] notification not received")
 	}
 	select {
 	case body := <-slackRequests:
