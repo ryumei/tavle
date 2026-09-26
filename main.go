@@ -178,6 +178,12 @@ func main() {
 					fmt.Println("writer channel is closed")
 					break loop
 				}
+				if msg.Type == "delete" {
+					if err := DeletePost(msg.Room, msg.ID, dataDirPath); err != nil {
+						log.Printf("[WARN] Failed to delete a message %v", err)
+					}
+					continue
+				}
 				SavePost(msg, dataDirPath, dbSecret)
 			}
 		}

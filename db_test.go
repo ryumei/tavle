@@ -161,3 +161,28 @@ func TestReadPost(t *testing.T) {
 	}
 
 }
+
+func TestDeletePost(t *testing.T) {
+	var roomname = "testroom"
+	var dataDir = t.TempDir()
+	var secret = []byte("CHANGEME_16CHARS")
+
+	keep := Message{Username: "keep", Message: "keep", Room: roomname, Timestamp: time.Now()}
+	remove := Message{Username: "remove", Message: "remove", Room: roomname, Timestamp: time.Now()}
+	SavePost(keep, dataDir, secret)
+	SavePost(remove, dataDir, secret)
+
+	if err := DeletePost(roomname, messageID(remove.Timestamp, remove.Username), dataDir); err != nil {
+		t.Fatalf("[ERROR] %v", err)
+	}
+	posts, _ := LoadPosts(roomname, time.Now(), 86400, dataDir, secret)
+	if len(posts) != 1 || posts[0].Message != "keep" {
+		t.Fatalf("[ERROR] unexpected posts %v", posts)
+	}
+
+	for _, id := range []string{"", "zz", "00"} {
+		if err := DeletePost(roomname, id, dataDir); err == nil {
+			t.Fatalf("[ERROR] invalid id '%s' should fail", id)
+		}
+	}
+}

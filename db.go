@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -107,6 +109,33 @@ func dbBoundKeySHA1(t time.Time) []byte {
 	}
 
 	return k
+}
+
+// messageID returns the ID of a message which is the hex encoded DB key
+func messageID(t time.Time, user string) string {
+	return hex.EncodeToString(dbKeySHA1(t, user))
+}
+
+// DeletePost メッセージを DB から削除します。
+func DeletePost(room string, id string, dataDir string) error {
+	key, err := hex.DecodeString(id)
+	if err != nil || len(key) != 8+sha1.Size {
+		return errors.New("invalid message id")
+	}
+	db, err := GetWritableDB(dataDir, room)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	bucketName := bytes2time(key[:8]).UTC().Format(BucketFormat)
+	return db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(bucketName))
+		if bucket == nil {
+			return nil
+		}
+		return bucket.Delete(key)
+	})
 }
 
 // SavePost メッセージを DB に保管します。

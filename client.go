@@ -64,7 +64,7 @@ func sanitizedMessage(raw []byte) (Message, error) {
 	m.Message = sanitize(m.Message)
 	m.Email = sanitize(m.Email)
 	m.Username = sanitize(m.Username)
-	if m.Message == "" {
+	if m.Type != "delete" && m.Message == "" {
 		return m, errors.New("Empty message")
 	}
 	log.Printf("[DEBUG] received message '%s'", m.Message)
@@ -106,6 +106,16 @@ func (sub subscription) readPump() {
 		}
 		// Do not trust the room in the message; use the room of the connection
 		m.Room = sub.room
+		if m.Type == "delete" {
+			if !validDeleteToken(m.Room, m.ID, m.DeleteToken, dbSecret) {
+				log.Printf("[WARN] Invalid token to delete a message '%s'", m.ID)
+				continue
+			}
+			hub.broadcast <- Message{Type: "delete", ID: m.ID, Room: m.Room}
+			continue
+		}
+		m.Type, m.ID, m.DeleteToken = "", "", "" // set by the hub
+		m.sender = conn
 
 		log.Printf("[DEBUG] unmarshaled message struct %v", m)
 		hub.broadcast <- m
