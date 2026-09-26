@@ -73,7 +73,13 @@ type Hub struct {
 
 	// Unregister requests from clients.
 	unregister chan subscription
+
+	// Time of the last post in rooms
+	lastPosted map[string]time.Time
 }
+
+// notifyInterval is the quiet time in a room to notify a new post to other services
+const notifyInterval = time.Hour
 
 // DefaultRoomname 省略時のルーム名
 var DefaultRoomname = "foyer"
@@ -84,6 +90,7 @@ var hub = Hub{
 	register:   make(chan subscription),
 	unregister: make(chan subscription),
 	rooms:      make(map[string]map[*connection]bool),
+	lastPosted: make(map[string]time.Time),
 }
 
 func (h *Hub) run() {
@@ -137,6 +144,9 @@ func (h *Hub) run() {
 				log.Printf("[ERROR] Failed to marshaling a message '%v'", own)
 			}
 			writer <- msg
+			if h.postedAfterQuiet(msg.Room, msg.Timestamp) {
+				go notifySlack(msg.Room)
+			}
 
 			var rawAdminMessage []byte
 			if strings.HasPrefix(msg.Message, "admin ") {
@@ -178,6 +188,14 @@ func (h *Hub) run() {
 			}
 		}
 	}
+}
+
+// postedAfterQuiet records the post time and reports whether the room had been quiet
+// for notifyInterval or more. It is true for the first post since the server started.
+func (h *Hub) postedAfterQuiet(roomname string, t time.Time) bool {
+	last, ok := h.lastPosted[roomname]
+	h.lastPosted[roomname] = t
+	return !ok || t.Sub(last) >= notifyInterval
 }
 
 // notifyMembers sends the number of connections to all connections in the room

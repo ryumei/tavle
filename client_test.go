@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -16,12 +18,25 @@ import (
 // startHubOnce starts the global hub only once since readPump uses it
 var startHubOnce sync.Once
 
+// slackRequests receives request bodies to the test slack webhook of "notifyroom"
+var slackRequests = make(chan string, 16)
+
 // startTestServer starts a websocket server with the global hub
 func startTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	conf.Server.DataDir = t.TempDir()
-	dbSecret = []byte("CHANGEME_16CHARS")
+	// Set the global config only once since goroutines of other tests may read it
 	startHubOnce.Do(func() {
+		dataDir, err := os.MkdirTemp("", "tavle-test")
+		if err != nil {
+			t.Fatal(err)
+		}
+		conf.Server.DataDir = dataDir
+		dbSecret = []byte("CHANGEME_16CHARS")
+		slack := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, _ := io.ReadAll(r.Body)
+			slackRequests <- string(body)
+		}))
+		conf.Notification.SlackWebhooks = map[string]string{"notifyroom": slack.URL}
 		go hub.run()
 		go func() {
 			for range writer { // drain messages to be saved
@@ -121,5 +136,38 @@ func TestDeleteMessage(t *testing.T) {
 		if m, ok := receive(t, ws, isDelete); !ok || m.ID != own.ID {
 			t.Fatalf("[ERROR] delete notification not received: %v", m)
 		}
+	}
+}
+
+// notifyRoomPosted is true after the first post to "notifyroom" in this process.
+// The hub keeps the last post time across tests.
+var notifyRoomPosted bool
+
+func TestNotifySlack(t *testing.T) {
+	server := startTestServer(t)
+	for _, room := range []string{"quietroom", "notifyroom", "notifyroom"} {
+		ws := dialRoom(t, server, room)
+		post, _ := json.Marshal(Message{Username: "user", Message: "secret text"})
+		ws.WriteMessage(websocket.TextMessage, post)
+		// Wait for the post to be delivered to keep the order
+		receive(t, ws, func(m Message) bool { return m.Message == "secret text" })
+	}
+
+	// Only the first post to "notifyroom" is notified since the second one is soon after it
+	if !notifyRoomPosted {
+		notifyRoomPosted = true
+		select {
+		case body := <-slackRequests:
+			if !strings.Contains(body, "notifyroom") || strings.Contains(body, "secret text") {
+				t.Fatalf("[ERROR] unexpected notification %s", body)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("[ERROR] notification not received")
+		}
+	}
+	select {
+	case body := <-slackRequests:
+		t.Fatalf("[ERROR] unexpected notification %s", body)
+	case <-time.After(200 * time.Millisecond):
 	}
 }
