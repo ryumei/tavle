@@ -61,7 +61,7 @@ func LogRequest(r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf(bufline.String())
+	log.Print(bufline.String())
 }
 
 func openLogFile(logPath string) *os.File {
