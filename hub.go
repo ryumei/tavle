@@ -137,6 +137,7 @@ func (h *Hub) run() {
 				log.Printf("[ERROR] Failed to marshaling a message '%v'", own)
 			}
 			writer <- msg
+			go notifySlack(msg.Room)
 
 			var rawAdminMessage []byte
 			if strings.HasPrefix(msg.Message, "admin ") {

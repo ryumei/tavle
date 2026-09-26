@@ -31,8 +31,9 @@ var (
 
 // config is master configuration
 type config struct {
-	Server serverConfig
-	Log    LogConfig
+	Server       serverConfig
+	Log          LogConfig
+	Notification NotificationConfig
 }
 
 // serverConfig is configuration for websocket server

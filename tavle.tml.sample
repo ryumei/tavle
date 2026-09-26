@@ -21,6 +21,11 @@ DataDir = "chatlog"
 # Secret 暗号化キー。16 文字。
 Secret = "CHANGEME"
 
+[Notification.SlackWebhooks]
+# 部屋ごとの Slack Incoming Webhook の URL。新着メッセージがあると部屋名だけを通知する。
+# 書いていない部屋は通知しない。"." を含む部屋名は "test.room" のように引用符で囲む。
+# foyer = "https://hooks.slack.com/services/XXXXX/XXXXX/XXXXX"
+
 [Log]
 # AccessLog クライアントからのアクセスログ
 # ServerLog サーバの動作ログ
