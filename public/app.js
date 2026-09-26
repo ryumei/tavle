@@ -28,7 +28,13 @@ var connectWs = function(vueBase) {
          * List なら、reload として前に付ける。
          * Item なら、new post として後に付ける。
          */
-        
+
+        // Auto scroll only when the user is near the bottom or the message is own post
+        var element = document.getElementById('chat-messages');
+        var autoScroll = element == null ||
+            element.scrollHeight - element.scrollTop - element.clientHeight < 50 ||
+            msg.username == self.username;
+
         self.talkTimeline.push({
             avatarImg: (msg.email != "") ? '<img src="https://s.gravatar.com/avatar/' + CryptoJS.MD5(msg.email) + '" />' : '',
             username: msg.username,
@@ -40,10 +46,14 @@ var connectWs = function(vueBase) {
         //if ($('.toast').length == 0) {
         //Materialize.toast('Unread messages', 3000);
         //}
-        /*
-        var element = document.getElementById('chat-messages');
-        element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
-        */
+        if (autoScroll) {
+            self.$nextTick(function() {
+                var element = document.getElementById('chat-messages');
+                if (element) {
+                    element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
+                }
+            });
+        }
     });
 }            
 
