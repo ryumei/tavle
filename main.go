@@ -74,6 +74,9 @@ func registHandlers(logPath string) http.Handler {
 var conf config
 var confPath string
 
+// dbSecret is 16 bytes secret key to encrypt chat logs
+var dbSecret []byte
+
 func loadConfig() {
 	flag.Parse()
 
@@ -139,7 +142,7 @@ func main() {
 	defer listener.Close()
 
 	// 16 bytes secret key
-	secret := loadSecret()
+	dbSecret = loadSecret()
 
 	exitCh := make(chan int)
 	go func() {
@@ -175,7 +178,7 @@ func main() {
 					fmt.Println("writer channel is closed")
 					break loop
 				}
-				SavePost(msg, dataDirPath, secret)
+				SavePost(msg, dataDirPath, dbSecret)
 			}
 		}
 	}()
