@@ -178,7 +178,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	messages, err := LoadPosts(room,
 		time.Now(), 86400,
 		conf.Server.DataDir,
-		[]byte(conf.Server.Secret))
+		dbSecret)
 	if err != nil {
 		log.Printf("[ERROR] failed to load recent messages %v", err)
 	} else {
